@@ -1702,9 +1702,6 @@ xdrawglyphfontspecs(const XftGlyphFontSpec *specs, Glyph base, int len, int x, i
 		}
 	}
 
-	/* Render the glyphs. */
-	XftDrawGlyphFontSpec(xw.draw, fg, specs, len);
-
 	/* Render strikethrough. Alway use the fg color. */
 	if (base.mode & ATTR_STRUCK) {
 		XftDrawRect(xw.draw, fg, winx, winy + 2 * dc.font.ascent / 3,
