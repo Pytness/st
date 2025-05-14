@@ -5,7 +5,9 @@
  *
  * font: see http://freedesktop.org/software/fontconfig/fontconfig-user.html
  */
-static char *font = "Liberation Mono:pixelsize=12:antialias=true:autohint=true";
+static char *font =
+    "CaskaydiaCove Nerd Font Mono:pixelsize=16:antialias=true:autohint=true";
+
 static int borderpx = 2;
 
 /* How to align the content in the window when the size of the terminal
@@ -23,7 +25,7 @@ static int anysize_valign = 50;
  * 4: value of shell in /etc/passwd
  * 5: value of shell in config.h
  */
-static char *shell = "/bin/sh";
+static char *shell = "/bin/zsh";
 char *utmp = NULL;
 /* scroll program: to enable use a string like "scroll" */
 char *scroll = NULL;
@@ -62,7 +64,7 @@ int allowwindowops = 0;
  * low minlatency will tear/flicker more, as it can "detect" idle too early.
  */
 static double minlatency = 2;
-static double maxlatency = 33;
+static double maxlatency = 5;
 
 /*
  * blinking timeout (set to 0 to disable blinking) for the terminal blinking
