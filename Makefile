@@ -4,7 +4,7 @@
 
 include config.mk
 
-SRC = st.c x.c
+SRC = st.c x.c $(SIXEL_C)
 OBJ = $(SRC:.c=.o)
 
 all: st
