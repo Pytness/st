@@ -15,10 +15,11 @@ config.h:
 .c.o:
 	$(CC) $(STCFLAGS) -c $<
 
-st.o: config.h st.h win.h
+st.o: config.h st.h win.h graphics.h
 x.o: arg.h config.h st.h win.h graphics.h hb.h
 boxdraw.o: config.h st.h boxdraw_data.h
 hb.o: st.h
+graphics.c: graphics.h khash.h kvec.h st.h
 
 $(OBJ): config.h config.mk
 
