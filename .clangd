@@ -1,0 +1,8 @@
+CompileFlags:
+  Add: [
+    "-I/usr/include/x11/",
+    "-I/usr/include/freetype2/",
+    "-I/usr/include/harfbuzz/",
+    "-I/usr/include/"
+    "-I$INCLUDE_PATH"
+  ]
