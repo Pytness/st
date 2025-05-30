@@ -1,8 +1,8 @@
-- [ ] st-font2-20190326-f64c2f8.diff
+- [x] st-font2-20190326-f64c2f8.diff
 
-- [ ] st-blinking_cursor-20230819-3a6d6d7.diff
+- [x] st-blinking_cursor-20230819-3a6d6d7.diff
 
-- [ ] st-kitty-graphics-20240922-a0274bc.diff
+- [x] st-kitty-graphics-20240922-a0274bc.diff
     - Included patches:
         - anysize:
 
@@ -22,6 +22,10 @@
         - Medium:
             - ligatures
 
-- [ ] st-boxdraw_v2-0.8.5.diff
+- [x] st-boxdraw_v2-0.8.5.diff
 
-- [ ] st-ligatures-boxdraw-20241226-0.9.2.diff
+- [x] st-ligatures-boxdraw-20241226-0.9.2.diff
+
+- [x] st-dynamic-cursor-color-0.9.diff
+
+- [x] st-clickurl-0.8.5.diff 
