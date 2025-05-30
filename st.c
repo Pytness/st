@@ -1281,6 +1281,8 @@ tsetchar(Rune u, const Glyph *attr, int x, int y)
 	if (u == IMAGE_PLACEHOLDER_CHAR || u == IMAGE_PLACEHOLDER_CHAR_OLD) {
 		term.line[y][x].u = 0;
 		term.line[y][x].mode |= ATTR_IMAGE;
+	} else if (isboxdraw(u)) {
+		term.line[y][x].mode |= ATTR_BOXDRAW;
 	}
 }
 
@@ -2927,7 +2929,8 @@ draw(void)
 
 	drawregion(0, 0, term.col, term.row);
 	xdrawcursor(cx, term.c.y, term.line[term.c.y][cx],
-			term.ocx, term.ocy, term.line[term.ocy][term.ocx]);
+			term.ocx, term.ocy, term.line[term.ocy][term.ocx],
+			term.line[term.ocy], term.col);
 	term.ocx = cx;
 	term.ocy = term.c.y;
 	xfinishdraw();
