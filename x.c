@@ -1859,7 +1859,9 @@ xdrawglyph(Glyph g, int x, int y)
 	int numspecs;
 	XftGlyphFontSpec *specs = xw.specbuf;
 
+	numspecs = xmakeglyphfontspecs(specs, &g, 1, x, y);
 	xdrawglyphfontspecs(specs, g, numspecs, x, y, (g.mode & ATTR_WIDE) ? 2 : 1);
+
 	if (g.mode & ATTR_IMAGE) {
 		gr_start_drawing(xw.buf, win.cw, win.ch);
 		xdrawoneimagecell(g, x, y);
