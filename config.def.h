@@ -177,6 +177,11 @@ static unsigned int cursorstyle = 1;
 static Rune stcursor = 0x2603; /* snowman ("☃") */
 
 /*
+ * Swaps the colors of your cursor and the character you're currently on
+*/
+static unsigned int dynamic_cursor = 1;
+
+/*
  * Default columns and rows numbers
  */
 
