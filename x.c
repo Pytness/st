@@ -1545,8 +1545,8 @@ xmakeglyphfontspecs(XftGlyphFontSpec *specs, const Glyph *glyphs, int len, int x
 			cluster_xp += shaped.positions[code_idx].x_advance / 64.;
 			cluster_yp += shaped.positions[code_idx].y_advance / 64.;
 			numspecs++;
-		} else if (glyphs[idx].mode & ATTR_IMAGE == 0
-			|| glyphs[idx].mode & ATTR_WIDE) {
+
+		} else if ((glyphs[idx].mode & ATTR_IMAGE) == 0) {
 			/* If it's not found, try to fetch it through the font cache. */
 			rune = glyphs[idx].u;
 			for (f = 0; f < frclen; f++) {
