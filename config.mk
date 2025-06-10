@@ -14,6 +14,7 @@ PKG_CONFIG = pkg-config
 
 # includes and libs
 INCS = -I$(X11INC) \
+       -I/usr/include/harfbuzz \
        `$(PKG_CONFIG) --cflags imlib2` \
        `$(PKG_CONFIG) --cflags fontconfig` \
        `$(PKG_CONFIG) --cflags freetype2`
