@@ -120,26 +120,57 @@ char *termname = "st-256color";
 unsigned int tabspaces = 8;
 
 /* Terminal colors (16 first used in escape sequence) */
+/*
+normal:
+    black:  '#000000'
+    red:    '#d86464'
+    green:  '#57d36d'
+    yellow: '#d0d06a'
+    blue:   '#6464ce'
+    magenta:'#d763cc'
+    cyan:   '#56d2d2'
+    white:  '#d9d9d9'
+
+  bright:
+    black:  '#323232'
+    red:    '#e8a1a2'
+    green:  '#9ce4a5'
+    yellow: '#e2e3a5'
+    blue:   '#a1a2e1'
+    magenta:'#e8a1e0'
+    cyan:   '#9ae3e5'
+    white:  '#ffffff'
+*/
 static const char *colorname[] = {
 	/* 8 normal colors */
-	"black",
-	"red3",
-	"green3",
-	"yellow3",
-	"blue2",
-	"magenta3",
-	"cyan3",
-	"gray90",
+	"#000000",
+	"#d86464",
+	"#57d36d",
+	"#d0d06a",
+	"#6464ce",
+	"#d763cc",
+	"#56d2d2",
+	"#d9d9d9",
+
+	// /* 8 bright colors */
+	// "#323232",
+	// "#e8a1a2",
+	// "#9ce4a5",
+	// "#e2e3a5",
+	// "#a1a2e1",
+	// "#e8a1e0",
+	// "#9ae3e5",
+	// "#ffffff",
 
 	/* 8 bright colors */
-	"gray50",
-	"red",
-	"green",
-	"yellow",
-	"#5c5cff",
-	"magenta",
-	"cyan",
-	"white",
+	"#000000",
+	"#d86464",
+	"#57d36d",
+	"#d0d06a",
+	"#6464ce",
+	"#d763cc",
+	"#56d2d2",
+	"#d9d9d9",
 
 	[255] = 0,
 
