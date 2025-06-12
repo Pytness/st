@@ -33,3 +33,5 @@
 - [x] st-clickurl-0.8.5.diff
 
 - [x] st-universcroll-0.8.4.diff
+
+- [x] st-appsync-20200618-b27a383.diff
