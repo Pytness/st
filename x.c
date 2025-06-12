@@ -2286,7 +2286,7 @@ xfinishdraw(void)
 	GC gc = NULL;
 	int width, height;
 	int del, desty, mode, x1, x2, xend;
-	int bw = borderpx, bh = borderpx;
+	int bw = win.hborderpx, bh = win.vborderpx;
 	Line line;
 
 	for (im = term.images; im; im = next) {
