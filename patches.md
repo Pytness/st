@@ -32,8 +32,4 @@
 
 - [x] st-clickurl-0.8.5.diff
 
-- [ ] st-universcroll-0.8.4.diff: PARTIALLY APPLIED
-
-    When scrolling on an alt screen inside a terminal multiplexer like zellij, it will scroll the multiplexer instead of the altscreen.
-
-    Otherwise it will function correctly.
+- [x] st-universcroll-0.8.4.diff
