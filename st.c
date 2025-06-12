@@ -986,17 +986,15 @@ ttyread(void)
 	case -1:
 		die("couldn't read from shell: %s\n", strerror(errno));
 	default:
-		// 
-		if (twrite_aborted) {
-			return ret;
-		}
+		buflen += twrite_aborted ? 0 : ret;
 
-		buflen += ret;
 		if (already_processing) {
 			/* Avoid recursive call to twrite() */
 			return ret;
 		}
+
 		already_processing = 1;
+
 		while (1) {
 			int buflen_before_processing = buflen;
 			written += twrite(buf + written, buflen - written, 0);
