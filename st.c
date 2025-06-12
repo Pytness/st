@@ -1957,6 +1957,8 @@ tsetmode(int priv, int set, const int *args, int narg)
 					tsync_end();
 				}
 				break;
+			case 2048: /* Rich text, ignored. Enabled by default. */
+				break;
 			/* Not implemented mouse modes. See comments there. */
 			case 1001: /* mouse highlight mode; can hang the
 				      terminal by design when implemented. */
@@ -2318,7 +2320,37 @@ csihandle(void)
 			goto unknown;
 		}
 		break;
+
+	case '$': /* DSR-EXT -- Device Status Report (Extended) */
+		switch (csiescseq.mode[1]) {
+		case 'p':
+		switch (csiescseq.arg[0]) {
+			case 2026: /* Synchronized Updates */
+			case 2048: /* Rich text attributes */
+				len = snprintf(buf, sizeof(buf), "\033[?%d;1$y",
+					csiescseq.arg[0]);
+
+				ttywrite(buf, len, 0);
+				break;
+			default:
+				fprintf(stderr, "erresc: unknown DSR-EXT %d\n",
+					csiescseq.arg[0]);
+				len = snprintf(buf, sizeof(buf), "\033[?%d;0$y",
+					csiescseq.arg[0]);
+
+				ttywrite(buf, len, 0);
+				break;
+		}
+		break;
+
+
+		default:
+			goto unknown;
+		}
+		break;
+
 	}
+
 }
 
 void
