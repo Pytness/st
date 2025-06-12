@@ -1677,10 +1677,22 @@ tdefcolor(const int *attr, int *npar, int l)
 				*npar);
 			break;
 		}
-		r = attr[*npar + 2];
-		g = attr[*npar + 3];
-		b = attr[*npar + 4];
-		*npar += 4;
+
+		if (attr[*npar] == 58) {
+			r = attr[*npar + 3];
+			g = attr[*npar + 4];
+			b = attr[*npar + 5];
+
+			*npar += 5;
+		} else {
+			r = attr[*npar + 2];
+			g = attr[*npar + 3];
+			b = attr[*npar + 4];
+
+
+			*npar += 4;
+		}
+
 		if (!BETWEEN(r, 0, 255) || !BETWEEN(g, 0, 255) || !BETWEEN(b, 0, 255))
 			fprintf(stderr, "erresc: bad rgb color (%u,%u,%u)\n",
 				r, g, b);
@@ -1811,7 +1823,7 @@ tsetattr(const int *attr, int l)
 		case 49:
 			term.c.attr.bg = defaultbg;
 			break;
-		case 58:
+		case 58: /*underline decoration color*/
 			if ((idx = tdefcolor(attr, &i, l)) >= 0)
 				tsetdecorcolor(&term.c.attr, idx);
 			break;
