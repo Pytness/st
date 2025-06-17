@@ -182,6 +182,11 @@ static const unsigned short boxdata[256] = {
 	[0x6f] = BDA + LU + LL,
 	[0x70] = BDA + LU + LR,
 
+	/* diagonals */
+	[0x71] = BDA + DR,  /* upper right to lower left */
+	[0x72] = BDA + DL,  /* upper left to lower right */
+	[0x73] = BDA + DR + DL,  /* cross */
+
 	/* Lower (Down) X/8 block (data is 8 - X) */
 	[0x81] = BBD + 7, [0x82] = BBD + 6, [0x83] = BBD + 5, [0x84] = BBD + 4,
 	[0x85] = BBD + 3, [0x86] = BBD + 2, [0x87] = BBD + 1, [0x88] = BBD + 0,

@@ -3,6 +3,7 @@
  * MIT/X Consortium License
  */
 
+#include <X11/X.h>
 #include <X11/Xft/Xft.h>
 #include "st.h"
 #include "boxdraw_data.h"
@@ -139,7 +140,55 @@ drawboxlines(int x, int y, int w, int h, XftColor *fg, ushort bd)
 	/* The base length (per direction till edge) includes this square.  */
 
 	int light = bd & (LL | LU | LR | LD);
+	int diagonal = (bd & BDA) && (bd & (DR | DL));
 	int double_ = bd & (DL | DU | DR | DD);
+
+	if (diagonal) {
+		XGCValues gcvals = {.foreground = fg->pixel, 
+				    .line_width = s,
+				    .line_style = LineSolid,
+				    .cap_style = CapNotLast};
+
+		GC gc = XCreateGC(xw.dpy, XftDrawDrawable(xw.draw),
+				  GCForeground | GCLineWidth | GCLineStyle | GCCapStyle,
+				  &gcvals);
+
+		// XRectangle clip = {.x = x, .y = y, .width = w, .height = h};
+		// XSetClipRectangles(xw.dpy, gc, 0, 0, &clip, 1, Unsorted);
+
+
+		if (bd & DR) {
+			int down_left_x = x; 
+			int down_left_y = y + h;
+			int up_right_x = x + w;
+			int up_right_y = y;
+
+			XPoint points[2] = {
+				{.x = down_left_x, .y = down_left_y},
+				{.x = up_right_x, .y = up_right_y}
+			};
+
+			XDrawLines(xw.dpy, XftDrawDrawable(xw.draw), gc, points, 2, CoordModeOrigin);
+		}
+
+		if (bd & DL) {
+			int down_right_x = x + w;
+			int down_right_y = y + h;
+			int up_left_x = x;
+			int up_left_y = y;
+
+			XPoint points[2] = {
+				{.x = up_left_x, .y = up_left_y},
+				{.x = down_right_x, .y = down_right_y},
+			};
+
+			XDrawLines(xw.dpy, XftDrawDrawable(xw.draw), gc, points, 2, CoordModeOrigin);
+		}
+
+		XFreeGC(xw.dpy, gc);
+
+		return;
+	}
 
 	if (light) {
 		/* d: additional (negative) length to not-draw the center   */
