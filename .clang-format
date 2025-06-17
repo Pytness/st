@@ -1,0 +1,17 @@
+BasedOnStyle: LLVM
+
+# Use tabs instead of spaces
+UseTab: ForIndentation
+ColumnLimit: 120
+
+# Optionally, set the tab width (default is 8)
+TabWidth: 8
+
+# Also align continued lines using tabs (optional)
+IndentWidth: 8
+ContinuationIndentWidth: 8
+
+AlignConsecutiveMacros: true
+AlignConsecutiveAssignments: true
+
+AllowShortEnumsOnASingleLine: false
