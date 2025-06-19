@@ -177,10 +177,10 @@ static const unsigned short boxdata[256] = {
 	[0x6c] = BDL + DH + DV,
 
 	/* (light) arcs */
-	[0x6d] = BDA + LD + LR,
-	[0x6e] = BDA + LD + LL,
-	[0x6f] = BDA + LU + LL,
-	[0x70] = BDA + LU + LR,
+	[0x6d] = BDA + LD + LR, // top left
+	[0x6e] = BDA + LD + LL, // top right 
+	[0x6f] = BDA + LU + LL, // bottom right 
+	[0x70] = BDA + LU + LR, // bottom left
 
 	/* diagonals */
 	[0x71] = BDA + DR,  /* upper right to lower left */

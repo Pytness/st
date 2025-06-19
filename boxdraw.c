@@ -5,6 +5,7 @@
 
 #include <X11/X.h>
 #include <X11/Xft/Xft.h>
+#include <X11/Xlib.h>
 #include "st.h"
 #include "boxdraw_data.h"
 
@@ -143,15 +144,18 @@ drawboxlines(int x, int y, int w, int h, XftColor *fg, ushort bd)
 	int diagonal = (bd & BDA) && (bd & (DR | DL));
 	int double_ = bd & (DL | DU | DR | DD);
 
-	if (diagonal) {
-		XGCValues gcvals = {.foreground = fg->pixel, 
-				    .line_width = s,
-				    .line_style = LineSolid,
-				    .cap_style = CapNotLast};
+	XGCValues gcvals = {.foreground = fg->pixel, 
+			    .line_width = s,
+			    .line_style = LineSolid,
+			    .cap_style = CapNotLast};
 
-		GC gc = XCreateGC(xw.dpy, XftDrawDrawable(xw.draw),
-				  GCForeground | GCLineWidth | GCLineStyle | GCCapStyle,
-				  &gcvals);
+	Drawable drawable = XftDrawDrawable(xw.draw);
+
+	GC gc = XCreateGC(xw.dpy, drawable,
+			  GCForeground | GCLineWidth | GCLineStyle | GCCapStyle,
+			  &gcvals);
+	// TODO: verify correctness of diagonal lines
+	if (diagonal) {
 
 		// XRectangle clip = {.x = x, .y = y, .width = w, .height = h};
 		// XSetClipRectangles(xw.dpy, gc, 0, 0, &clip, 1, Unsorted);
@@ -168,7 +172,7 @@ drawboxlines(int x, int y, int w, int h, XftColor *fg, ushort bd)
 				{.x = up_right_x, .y = up_right_y}
 			};
 
-			XDrawLines(xw.dpy, XftDrawDrawable(xw.draw), gc, points, 2, CoordModeOrigin);
+			XDrawLines(xw.dpy, drawable, gc, points, 2, CoordModeOrigin);
 		}
 
 		if (bd & DL) {
@@ -182,10 +186,9 @@ drawboxlines(int x, int y, int w, int h, XftColor *fg, ushort bd)
 				{.x = down_right_x, .y = down_right_y},
 			};
 
-			XDrawLines(xw.dpy, XftDrawDrawable(xw.draw), gc, points, 2, CoordModeOrigin);
+			XDrawLines(xw.dpy, drawable, gc, points, 2, CoordModeOrigin);
 		}
 
-		XFreeGC(xw.dpy, gc);
 
 		return;
 	}
@@ -193,11 +196,16 @@ drawboxlines(int x, int y, int w, int h, XftColor *fg, ushort bd)
 	if (light) {
 		/* d: additional (negative) length to not-draw the center   */
 		/* texel - at arcs and avoid drawing inside (some) doubles  */
-		int arc = bd & BDA;
+		int is_arc = bd & BDA;
 		int multi_light = light & (light - 1);
 		int multi_double = double_ & (double_ - 1);
 		/* light crosses double only at DH+LV, DV+LH (ref. shapes)  */
-		int d = arc || (multi_double && !multi_light) ? -s : 0;
+		int d = (multi_double && !multi_light) ? -s : 0;
+
+		if (is_arc) {
+			d = -mwh/2;
+		}
+
 
 		if (bd & LL)
 			XftDrawRect(xd, fg, x, y + h2, w2 + s + d, s);
@@ -207,6 +215,73 @@ drawboxlines(int x, int y, int w, int h, XftColor *fg, ushort bd)
 			XftDrawRect(xd, fg, x + w2 - d, y + h2, w - w2 + d, s);
 		if (bd & LD)
 			XftDrawRect(xd, fg, x + w2, y + h2 - d, s, h - h2 + d);
+
+		if (is_arc) {
+
+			// extern int XDrawArc(
+			//     Display*		/* display */,
+			//     Drawable		/* d */,
+			//     GC			/* gc */,
+			//     int			/* x */,
+			//     int			/* y */,
+			//     unsigned int	/* width */,
+			//     unsigned int	/* height */,
+			//     int			/* angle1 */,
+			//     int			/* angle2 */
+			// );
+
+
+			// top-right arc
+			if (bd & LL && bd & LD) {
+				XDrawArc(
+					xdpy, drawable, gc,
+					x + w2 - mwh + s / 2,
+					y + h2 + s / 2,
+					mwh,
+					mwh,
+					90*64, 
+					-90*64);
+			}
+
+			// bottom right arc
+			if (bd & LL && bd & LU) {
+				XDrawArc(
+					xdpy, drawable, gc,
+					x + w2 - mwh + s / 2,
+					y,
+					mwh,
+					mwh,
+					0*64, 
+					-90*64);
+			}
+
+			// top left arc
+			if (bd & LR && bd & LD) {
+				XDrawArc(
+					xdpy, drawable, gc,
+					x + w2 + s / 2,
+					y + h2 + s / 2,
+					mwh,
+					mwh,
+					180*64, 
+					-90*64);
+			}
+
+			// bottom left arc
+			if (bd & LR && bd & LU) {
+				XDrawArc(
+					xdpy, drawable, gc,
+					x + w2 + s / 2,
+					y,
+					mwh,
+					mwh,
+					270*64, 
+					-90*64);
+			}
+		}
+
+
+
 	}
 
 	/* double lines - also align with light to form heavy when combined */
@@ -240,4 +315,6 @@ drawboxlines(int x, int y, int w, int h, XftColor *fg, ushort bd)
 			XftDrawRect(xd, fg, x + w2 - s, y + h2 - n, s, h - h2 + n);
 		}
 	}
+
+	XFreeGC(xw.dpy, gc);
 }
