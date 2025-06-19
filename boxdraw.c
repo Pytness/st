@@ -217,71 +217,48 @@ drawboxlines(int x, int y, int w, int h, XftColor *fg, ushort bd)
 			XftDrawRect(xd, fg, x + w2, y + h2 - d, s, h - h2 + d);
 
 		if (is_arc) {
-
-			// extern int XDrawArc(
-			//     Display*		/* display */,
-			//     Drawable		/* d */,
-			//     GC			/* gc */,
-			//     int			/* x */,
-			//     int			/* y */,
-			//     unsigned int	/* width */,
-			//     unsigned int	/* height */,
-			//     int			/* angle1 */,
-			//     int			/* angle2 */
-			// );
-
+			int circle_x = 0;
+			int circle_y = 0;
+			int angle_start = 0;
+			int angle_end = 0;
 
 			// top-right arc
 			if (bd & LL && bd & LD) {
-				XDrawArc(
-					xdpy, drawable, gc,
-					x + w2 - mwh + s / 2,
-					y + h2 + s / 2,
-					mwh,
-					mwh,
-					90*64, 
-					-90*64);
+				circle_x    = x + w2 - mwh + s / 2;
+				circle_y    = y + h2 + s / 2;
+				angle_start = 90 * 64;
+				angle_end   = -90 * 64;
 			}
 
 			// bottom right arc
 			if (bd & LL && bd & LU) {
-				XDrawArc(
-					xdpy, drawable, gc,
-					x + w2 - mwh + s / 2,
-					y,
-					mwh,
-					mwh,
-					0*64, 
-					-90*64);
+				circle_x    = x + w2 - mwh + s / 2;
+				circle_y    = y;
+				angle_start = 0*64;
+				angle_end   = -90*64;
 			}
 
 			// top left arc
 			if (bd & LR && bd & LD) {
-				XDrawArc(
-					xdpy, drawable, gc,
-					x + w2 + s / 2,
-					y + h2 + s / 2,
-					mwh,
-					mwh,
-					180*64, 
-					-90*64);
+				circle_x    = x + w2 + s / 2;
+				circle_y    = y + h2 + s / 2;
+				angle_start = 180*64;
+				angle_end   = -90*64;
 			}
 
 			// bottom left arc
 			if (bd & LR && bd & LU) {
-				XDrawArc(
-					xdpy, drawable, gc,
-					x + w2 + s / 2,
-					y,
-					mwh,
-					mwh,
-					270*64, 
-					-90*64);
+				circle_x    = x + w2 + s / 2;
+				circle_y    = y;
+				angle_start = 270*64;
+				angle_end   = -90*64;
 			}
+
+			XDrawArc(xdpy, drawable, gc,
+				circle_x, circle_y,
+				mwh, mwh,
+				angle_start, angle_end);
 		}
-
-
-
 	}
 
 	/* double lines - also align with light to form heavy when combined */
