@@ -12,13 +12,15 @@
 /* Rounded non-negative integers division of n / d  */
 #define DIV(n, d) (((n) + (d) / 2) / (d))
 
+#define SUPERSAMPLE 1
+
 static Display *xdpy;
 static Colormap xcmap;
 static XftDraw *xd;
 static Visual *xvis;
 
 static void drawbox(int, int, int, int, XftColor *, XftColor *, ushort);
-static void drawboxlines(int, int, int, int, XftColor *, ushort);
+static void drawboxlines(int, int, int, int, XftColor *, XftColor *, ushort);
 
 /* public API */
 
@@ -63,7 +65,7 @@ drawbox(int x, int y, int w, int h, XftColor *fg, XftColor *bg, ushort bd)
 	ushort cat = bd & ~(BDB | 0xff);  /* mask out bold and data */
 	if (bd & (BDL | BDA)) {
 		/* lines (light/double/heavy/arcs) */
-		drawboxlines(x, y, w, h, fg, bd);
+		drawboxlines(x, y, w, h, fg, bg, bd);
 
 	} else if (cat == BBD) {
 		/* lower (8-X)/8 block */
@@ -127,7 +129,7 @@ drawbox(int x, int y, int w, int h, XftColor *fg, XftColor *bg, ushort bd)
 }
 
 void
-drawboxlines(int x, int y, int w, int h, XftColor *fg, ushort bd)
+drawboxlines(int x, int y, int w, int h, XftColor *fg, XftColor *bg, ushort bd)
 {
 	/* s: stem thickness. width/8 roughly matches underscore thickness. */
 	/* We draw bold as 1.5 * normal-stem and at least 1px thicker.      */
@@ -206,7 +208,6 @@ drawboxlines(int x, int y, int w, int h, XftColor *fg, ushort bd)
 			d = -mwh/2;
 		}
 
-
 		if (bd & LL)
 			XftDrawRect(xd, fg, x, y + h2, w2 + s + d, s);
 		if (bd & LU)
@@ -216,6 +217,7 @@ drawboxlines(int x, int y, int w, int h, XftColor *fg, ushort bd)
 		if (bd & LD)
 			XftDrawRect(xd, fg, x + w2, y + h2 - d, s, h - h2 + d);
 
+
 		if (is_arc) {
 			int circle_x = 0;
 			int circle_y = 0;
@@ -224,41 +226,133 @@ drawboxlines(int x, int y, int w, int h, XftColor *fg, ushort bd)
 
 			// top-right arc
 			if (bd & LL && bd & LD) {
-				circle_x    = x + w2 - mwh + s / 2;
-				circle_y    = y + h2 + s / 2;
+				circle_x    = x + w2 - mwh + s;
+				circle_y    = y + h2;
 				angle_start = 90 * 64;
 				angle_end   = -90 * 64;
 			}
 
 			// bottom right arc
 			if (bd & LL && bd & LU) {
-				circle_x    = x + w2 - mwh + s / 2;
-				circle_y    = y;
+				circle_x    = x + w2 - mwh + s;
+				circle_y    = y + s / 2;
 				angle_start = 0*64;
 				angle_end   = -90*64;
 			}
 
 			// top left arc
 			if (bd & LR && bd & LD) {
-				circle_x    = x + w2 + s / 2;
-				circle_y    = y + h2 + s / 2;
+				circle_x    = x + w2;
+				circle_y    = y + h2;
 				angle_start = 180*64;
 				angle_end   = -90*64;
 			}
 
 			// bottom left arc
 			if (bd & LR && bd & LU) {
-				circle_x    = x + w2 + s / 2;
-				circle_y    = y;
+				circle_x    = x + w2;
+				circle_y    = y + s / 2;
 				angle_start = 270*64;
 				angle_end   = -90*64;
 			}
 
-			XDrawArc(xdpy, drawable, gc,
-				circle_x, circle_y,
-				mwh, mwh,
+			// angle_start = 0;
+			// angle_end = 360 * 64;
+
+			int hi_s = s * SUPERSAMPLE;
+			XGCValues hi_gcvals = {
+				.foreground = fg->pixel, 
+				.background = bg->pixel,
+				.line_width = hi_s,
+				.line_style = LineSolid,
+				.cap_style = CapNotLast};
+
+
+			GC hi_gc = XCreateGC(xw.dpy, drawable,
+					  GCForeground | GCLineWidth | GCLineStyle | GCCapStyle,
+					  &hi_gcvals);
+			Pixmap hi_res = XCreatePixmap(xdpy, drawable,
+				 mwh * SUPERSAMPLE, mwh * SUPERSAMPLE,
+				 DefaultDepth(xdpy, DefaultScreen(xdpy)));
+
+
+			XftColor xfc;
+			XRenderColor xrc = { .alpha = 0 };
+			xrc.red = fg->color.red;
+			xrc.green = fg->color.green;
+			xrc.blue = fg->color.blue;
+
+			XftColorAllocValue(xdpy, xvis, xcmap, &xrc, &xfc);
+			XftDrawRect(xd, &xfc, 0, 0,
+				mwh * SUPERSAMPLE, mwh * SUPERSAMPLE);
+			XftColorFree(xdpy, xvis, xcmap, &xfc);
+
+;
+			XDrawArc(xdpy, hi_res, hi_gc,
+				hi_s / 2, hi_s / 2,
+				mwh * SUPERSAMPLE - hi_s , mwh * SUPERSAMPLE - hi_s ,
 				angle_start, angle_end);
+
+			XImage * hi_img = XGetImage(xdpy, hi_res,
+				0, 0, mwh * SUPERSAMPLE, mwh * SUPERSAMPLE,
+				AllPlanes, ZPixmap);
+
+			XImage *lo_img = XGetImage(xdpy, drawable, 
+				circle_x, circle_y, mwh, mwh,
+				AllPlanes, ZPixmap);
+
+
+			int bytes_per_pixel = hi_img->bits_per_pixel / 8;
+			int lo_img_size = lo_img->height * lo_img->bytes_per_line;
+
+			// Downsample using simple box filter
+			for (int y = 0; y < mwh; ++y) {
+			    for (int x = 0; x < mwh; ++x) {
+				unsigned long r = 0, g = 0, b = 0;
+
+				for (int dy = 0; dy < SUPERSAMPLE; ++dy) {
+				    for (int dx = 0; dx < SUPERSAMPLE; ++dx) {
+					int hx = x * SUPERSAMPLE + dx;
+					int hy = y * SUPERSAMPLE + dy;
+
+					unsigned long pixel = XGetPixel(hi_img, hx, hy);
+
+					r += (pixel >> 16) & 0xff;
+					g += (pixel >> 8) & 0xff;
+					b += pixel & 0xff;
+				    }
+				}
+
+				r /= (SUPERSAMPLE * SUPERSAMPLE);
+				g /= (SUPERSAMPLE * SUPERSAMPLE);
+				b /= (SUPERSAMPLE * SUPERSAMPLE);
+
+				unsigned long avg_pixel =
+				    ((r & 0xff) << 16) |
+				    ((g & 0xff) << 8) |
+				    (b & 0xff);
+
+				// FIX: if the average pixel is 0, we skip it
+				if (avg_pixel == 0) {
+					continue;
+				}
+
+				XPutPixel(lo_img, x, y, avg_pixel);
+			    }
+			}
+
+			XPutImage(xdpy, drawable, gc, lo_img,
+				  0, 0,         // src x/y
+				  circle_x, circle_y,  // dest x/y
+				  mwh, mwh);
+
+			XDestroyImage(hi_img);  // Frees data too
+			XDestroyImage(lo_img);  // Frees data + malloc'd buffer
+			XFreePixmap(xdpy, hi_res);
+			XFreeGC(xw.dpy, hi_gc);
+
 		}
+
 	}
 
 	/* double lines - also align with light to form heavy when combined */
