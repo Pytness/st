@@ -6,9 +6,9 @@
  * font: see http://freedesktop.org/software/fontconfig/fontconfig-user.html
  */
 #include <X11/Xutil.h>
-static char *font = "CaskaydiaCove Nerd Font Mono:pixelsize=30:antialias=true:autohint=true";
+static char * font = "CaskaydiaCove Nerd Font Mono:pixelsize=30:antialias=true:autohint=true";
 /* Spare fonts */
-static char *font2[] = {
+static char * font2[] = {
         "Symbols Nerd Font:pixelsize=30:antialias=true:autohint=true",
         /*	"Hack Nerd Font Mono:pixelsize=11:antialias=true:autohint=true", */
 };
@@ -30,15 +30,15 @@ static int anysize_valign = 50;
  * 4: value of shell in /etc/passwd
  * 5: value of shell in config.h
  */
-static char *shell = "/bin/zsh";
-char *utmp         = NULL;
+static char * shell = "/bin/zsh";
+char * utmp         = NULL;
 /* scroll program: to enable use a string like "scroll" */
-char *scroll    = NULL;
-char *stty_args = "stty raw pass8 nl -echo -iexten -cstopb 38400";
+char * scroll    = NULL;
+char * stty_args = "stty raw pass8 nl -echo -iexten -cstopb 38400";
 
 /* identification sequence returned in DA and DECID */
 /* By default, use the same one as kitty. VT200 family (62) with sixel (4) */
-char *vtiden = "\033[?62;4c";
+char * vtiden = "\033[?62;4c";
 
 /* sixel rgb byte order: LSBFirst or MSBFirst */
 int const sixelbyteorder = LSBFirst;
@@ -52,7 +52,7 @@ static float chscale = 1.0;
  *
  * More advanced example: L" `'\"()[]{}"
  */
-wchar_t *worddelimiters = L" ";
+wchar_t * worddelimiters = L" ";
 
 /* selection timeouts (in milliseconds) */
 static unsigned int doubleclicktimeout = 300;
@@ -110,7 +110,7 @@ const int boxdraw_braille = 1;
 static int bellvolume = 0;
 
 /* default TERM value */
-char *termname = "st-256color";
+char * termname = "st-256color";
 
 /*
  * spaces per tab
@@ -151,9 +151,16 @@ normal:
     cyan:   '#9ae3e5'
     white:  '#ffffff'
 */
-static const char *colorname[] = {
+static const char * colorname[] = {
         /* 8 normal colors */
-        "#000000", "#d86464", "#57d36d", "#d0d06a", "#6464ce", "#d763cc", "#56d2d2", "#d9d9d9",
+        "#000000",
+        "#d86464",
+        "#57d36d",
+        "#d0d06a",
+        "#6464ce",
+        "#d763cc",
+        "#56d2d2",
+        "#d9d9d9",
 
         // /* 8 bright colors */
         // "#323232",
@@ -166,13 +173,22 @@ static const char *colorname[] = {
         // "#ffffff",
 
         /* 8 bright colors */
-        "#000000", "#d86464", "#57d36d", "#d0d06a", "#6464ce", "#d763cc", "#56d2d2", "#d9d9d9",
+        "#000000",
+        "#d86464",
+        "#57d36d",
+        "#d0d06a",
+        "#6464ce",
+        "#d763cc",
+        "#56d2d2",
+        "#d9d9d9",
 
         [255] = 0,
 
         /* more colors can be added after 255 to use with DefaultXX */
-        "#cccccc", "#555555", "gray90", /* default foreground colour */
-        "black",                        /* default background colour */
+        "#cccccc",
+        "#555555",
+        "gray90", /* default foreground colour */
+        "black",  /* default background colour */
 };
 
 /*
@@ -555,8 +571,8 @@ static char ascii_printable[] = " !\"#$%&'()*+,-./0123456789:;<=>?"
  * Open urls starting with urlprefixes, contatining urlchars
  * by passing as ARG1 to urlhandler.
  */
-char *urlhandler    = "xdg-open";
-char urlchars[]     = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                      "abcdefghijklmnopqrstuvwxyz"
-                      "0123456789-._~:/?#@!$&'*+,;=%";
-char *urlprefixes[] = {"http://", "https://", NULL};
+char * urlhandler    = "xdg-open";
+char urlchars[]      = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                       "abcdefghijklmnopqrstuvwxyz"
+                       "0123456789-._~:/?#@!$&'*+,;=%";
+char * urlprefixes[] = {"http://", "https://", NULL};

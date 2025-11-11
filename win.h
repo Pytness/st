@@ -39,5 +39,5 @@ void xsetsel(char *);
 int xstartdraw(void);
 void xximspot(int, int);
 
-void xstartimagedraw(int *dirty, int rows);
+void xstartimagedraw(int * dirty, int rows);
 void xfinishimagedraw();

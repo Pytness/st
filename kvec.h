@@ -56,7 +56,7 @@ int main() {
 #define kvec_t(type)                                                                                                   \
 	struct {                                                                                                       \
 		size_t n, m;                                                                                           \
-		type *a;                                                                                               \
+		type * a;                                                                                              \
 	}
 #define kv_init(v)    ((v).n = (v).m = 0, (v).a = 0)
 #define kv_destroy(v) free((v).a)

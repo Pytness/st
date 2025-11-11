@@ -154,12 +154,12 @@ typedef struct {
 /* ESC type [[ [<priv>] <arg> [;]] <mode>] ESC '\' */
 typedef struct {
 	char type;  /* ESC type ... */
-	char *buf;  /* allocated raw string */
+	char * buf; /* allocated raw string */
 	size_t siz; /* allocation size */
 	size_t len; /* raw string length */
-	char *args[STR_ARG_SIZ];
-	int narg;   /* nb of args */
-	char *term; /* terminator: ST or BEL */
+	char * args[STR_ARG_SIZ];
+	int narg;    /* nb of args */
+	char * term; /* terminator: ST or BEL */
 } STREscape;
 
 static void execsh(char *, char **);
@@ -265,7 +265,7 @@ int tinsync(uint timeout) {
 	return su;
 }
 
-ssize_t xwrite(int fd, const char *s, size_t len) {
+ssize_t xwrite(int fd, const char * s, size_t len) {
 	size_t aux = len;
 	ssize_t r;
 
@@ -281,8 +281,8 @@ ssize_t xwrite(int fd, const char *s, size_t len) {
 	return aux;
 }
 
-void *xmalloc(size_t len) {
-	void *p;
+void * xmalloc(size_t len) {
+	void * p;
 
 	if (!(p = malloc(len))) {
 		die("malloc: %s\n", strerror(errno));
@@ -291,7 +291,7 @@ void *xmalloc(size_t len) {
 	return p;
 }
 
-void *xrealloc(void *p, size_t len) {
+void * xrealloc(void * p, size_t len) {
 	if ((p = realloc(p, len)) == NULL) {
 		die("realloc: %s\n", strerror(errno));
 	}
@@ -299,8 +299,8 @@ void *xrealloc(void *p, size_t len) {
 	return p;
 }
 
-char *xstrdup(const char *s) {
-	char *p;
+char * xstrdup(const char * s) {
+	char * p;
 	if ((p = strdup(s)) == NULL) {
 		die("strdup: %s\n", strerror(errno));
 	}
@@ -308,7 +308,7 @@ char *xstrdup(const char *s) {
 	return p;
 }
 
-size_t utf8decode(const char *c, Rune *u, size_t clen) {
+size_t utf8decode(const char * c, Rune * u, size_t clen) {
 	size_t i, len;
 	Rune udecoded;
 
@@ -337,7 +337,7 @@ size_t utf8decode(const char *c, Rune *u, size_t clen) {
 	return len;
 }
 
-Rune utf8decodebyte(char c, size_t *i) {
+Rune utf8decodebyte(char c, size_t * i) {
 	for (*i = 0; *i < LEN(utfmask); ++(*i)) {
 		if (((uchar)c & utfmask[*i]) == utfbyte[*i]) {
 			return (uchar)c & ~utfmask[*i];
@@ -347,7 +347,7 @@ Rune utf8decodebyte(char c, size_t *i) {
 	return 0;
 }
 
-size_t utf8encode(Rune u, char *c) {
+size_t utf8encode(Rune u, char * c) {
 	size_t len, i;
 
 	len = utf8validate(&u, 0);
@@ -368,7 +368,7 @@ char utf8encodebyte(Rune u, size_t i) {
 	return utfbyte[i] | (u & ~utfmask[i]);
 }
 
-size_t utf8validate(Rune *u, size_t i) {
+size_t utf8validate(Rune * u, size_t i) {
 	if (!BETWEEN(*u, utfmin[i], utfmax[i]) || BETWEEN(*u, 0xD800, 0xDFFF)) {
 		*u = UTF_INVALID;
 	}
@@ -378,14 +378,14 @@ size_t utf8validate(Rune *u, size_t i) {
 	return i;
 }
 
-char base64dec_getc(const char **src) {
+char base64dec_getc(const char ** src) {
 	while (**src && !isprint((unsigned char)**src)) {
 		(*src)++;
 	}
 	return **src ? *((*src)++) : '='; /* emulate padding if string ends */
 }
 
-char *base64dec(const char *src) {
+char * base64dec(const char * src) {
 	size_t in_len = strlen(src);
 	char *result, *dst;
 	static const char base64_digits[256] = {[43] = 62, 0,  0,  0,  63, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 0,
@@ -530,7 +530,7 @@ int selected(int x, int y) {
 	return BETWEEN(y, sel.nb.y, sel.ne.y) && (y != sel.nb.y || x >= sel.nb.x) && (y != sel.ne.y || x <= sel.ne.x);
 }
 
-void selsnap(int *x, int *y, int direction) {
+void selsnap(int * x, int * y, int direction) {
 	int newx, newy, xt, yt;
 	int delim, prevdelim;
 	const Glyph *gp, *prevgp;
@@ -558,6 +558,7 @@ void selsnap(int *x, int *y, int direction) {
 				} else {
 					yt = newy, xt = newx;
 				}
+
 				if (!(term.line[yt][xt].mode & ATTR_WRAP)) {
 					break;
 				}
@@ -603,7 +604,7 @@ void selsnap(int *x, int *y, int direction) {
 	}
 }
 
-char *getsel(void) {
+char * getsel(void) {
 	char *str, *ptr;
 	int y, bufsize, lastx, linelen;
 	const Glyph *gp, *last;
@@ -666,8 +667,8 @@ char *getsel(void) {
 	return str;
 }
 
-char *strstrany(char *s, char **strs) {
-	char *match;
+char * strstrany(char * s, char ** strs) {
+	char * match;
 	for (int i = 0; strs[i]; i++) {
 		if ((match = strstr(s, strs[i]))) {
 			return match;
@@ -677,8 +678,8 @@ char *strstrany(char *s, char **strs) {
 }
 
 void highlighturls(void) {
-	char *match;
-	char *linestr = calloc(sizeof(char), term.col + 1); /* assume ascii */
+	char * match;
+	char * linestr = calloc(sizeof(char), term.col + 1); /* assume ascii */
 	for (int i = term.top; i < term.bot; i++) {
 		int url_start = -1;
 		for (int j = 0; j < term.col; j++) {
@@ -701,7 +702,7 @@ void highlighturls(void) {
 void unhighlighturls(void) {
 	for (int i = term.top; i < term.bot; i++) {
 		for (int j = 0; j < term.col; j++) {
-			Glyph *g = &term.line[i][j];
+			Glyph * g = &term.line[i][j];
 			if (g->mode & ATTR_URL) {
 				g->mode &= ~ATTR_URL;
 				tsetdirt(i, j);
@@ -712,8 +713,8 @@ void unhighlighturls(void) {
 }
 
 void followurl(int x, int y) {
-	char *linestr = calloc(sizeof(char), term.col + 1); /* assume ascii */
-	char *match;
+	char * linestr = calloc(sizeof(char), term.col + 1); /* assume ascii */
+	char * match;
 	for (int i = 0; i < term.col; i++) {
 		if (term.line[x][i].u < 127) {
 			linestr[i] = term.line[x][i].u;
@@ -764,7 +765,7 @@ void selremove(void) {
 	sel.ob.x = -1;
 }
 
-void die(const char *errstr, ...) {
+void die(const char * errstr, ...) {
 	va_list ap;
 
 	va_start(ap, errstr);
@@ -773,9 +774,9 @@ void die(const char *errstr, ...) {
 	exit(1);
 }
 
-void execsh(char *cmd, char **args) {
+void execsh(char * cmd, char ** args) {
 	char *sh, *prog, *arg;
-	const struct passwd *pw;
+	const struct passwd * pw;
 
 	errno = 0;
 	if ((pw = getpwuid(getuid())) == NULL) {
@@ -843,7 +844,7 @@ void sigchld(int a) {
 	}
 }
 
-void stty(char **args) {
+void stty(char ** args) {
 	char cmd[_POSIX_ARG_MAX], **p, *q, *s;
 	size_t n, siz;
 
@@ -868,7 +869,7 @@ void stty(char **args) {
 	}
 }
 
-int ttynew(const char *line, char *cmd, const char *out, char **args) {
+int ttynew(const char * line, char * cmd, const char * out, char ** args) {
 	int m, s;
 	struct sigaction sa;
 
@@ -991,8 +992,8 @@ size_t ttyread(void) {
 	}
 }
 
-void ttywrite(const char *s, size_t n, int may_echo) {
-	const char *next;
+void ttywrite(const char * s, size_t n, int may_echo) {
+	const char * next;
 
 	if (may_echo && IS_SET(MODE_ECHO)) {
 		twrite(s, n, 1);
@@ -1018,7 +1019,7 @@ void ttywrite(const char *s, size_t n, int may_echo) {
 	}
 }
 
-void ttywriteraw(const char *s, size_t n) {
+void ttywriteraw(const char * s, size_t n) {
 	fd_set wfd, rfd;
 	ssize_t r;
 	size_t lim       = 256;
@@ -1205,8 +1206,8 @@ int tisaltscr(void) {
 }
 
 void tswapscreen(void) {
-	Line *tmp     = term.line;
-	ImageList *im = term.images;
+	Line * tmp     = term.line;
+	ImageList * im = term.images;
 
 	term.line       = term.alt;
 	term.alt        = tmp;
@@ -1368,8 +1369,8 @@ void tmoveto(int x, int y) {
 	term.c.y = LIMIT(y, miny, maxy);
 }
 
-void tsetchar(Rune u, const Glyph *attr, int x, int y) {
-	static const char *vt100_0[62] = {
+void tsetchar(Rune u, const Glyph * attr, int x, int y) {
+	static const char * vt100_0[62] = {
 	        /* 0x41 - 0x7e */
 	        "↑", "↓", "→", "←", "█", "▚", "☃",      /* A - G */
 	        0,   0,   0,   0,   0,   0,   0,   0,   /* H - O */
@@ -1421,7 +1422,7 @@ void tsetchar(Rune u, const Glyph *attr, int x, int y) {
 
 void tclearregion(int x1, int y1, int x2, int y2) {
 	int x, y, temp;
-	Glyph *gp;
+	Glyph * gp;
 
 	if (x1 > x2) {
 		temp = x1, x1 = x2, x2 = temp;
@@ -1455,7 +1456,7 @@ void tclearregion(int x1, int y1, int x2, int y2) {
 /// cursor. Adds empty lines if needed. The placeholder will be marked as
 /// classic.
 void tcreateimgplaceholder(uint32_t image_id, uint32_t placement_id, int cols, int rows, char do_not_move_cursor,
-                           Glyph *text_underneath) {
+                           Glyph * text_underneath) {
 	for (int row = 0; row < rows; ++row) {
 		int y         = term.c.y;
 		term.dirty[y] = 1;
@@ -1464,19 +1465,19 @@ void tcreateimgplaceholder(uint32_t image_id, uint32_t placement_id, int cols, i
 			if (x >= term.col) {
 				break;
 			}
-			Glyph *gp = &term.line[y][x];
+			Glyph * gp = &term.line[y][x];
 			if (selected(x, y)) {
 				selclear();
 			}
 
 			if (text_underneath) {
-				Glyph *to_save = gp;
+				Glyph * to_save = gp;
 				// If there is already a classic placeholder,
 				// use the text underneath it. This will leave
 				// holes in images, but at least we are
 				// guaranteed to restore the original text.
 				if (gp->mode & ATTR_IMAGE && tgetisclassicplaceholder(gp)) {
-					Glyph *under = gr_get_glyph_underneath_image(
+					Glyph * under = gr_get_glyph_underneath_image(
 					        tgetimgid(gp), tgetimgplacementid(gp), tgetimgcol(gp), tgetimgrow(gp));
 					if (under) {
 						to_save = under;
@@ -1520,10 +1521,10 @@ void tcreateimgplaceholder(uint32_t image_id, uint32_t placement_id, int cols, i
 	}
 }
 
-void gr_for_each_image_cell(int (*callback)(void *data, Glyph *gp), void *data) {
+void gr_for_each_image_cell(int (*callback)(void * data, Glyph * gp), void * data) {
 	for (int row = 0; row < term.row; ++row) {
 		for (int col = 0; col < term.col; ++col) {
-			Glyph *gp = &term.line[row][col];
+			Glyph * gp = &term.line[row][col];
 			if (gp->mode & ATTR_IMAGE) {
 				if (callback(data, gp)) {
 					term.dirty[row] = 1;
@@ -1539,7 +1540,7 @@ void gr_schedule_image_redraw_by_id(uint32_t image_id) {
 			continue;
 		}
 		for (int col = 0; col < term.col; ++col) {
-			Glyph *gp = &term.line[row][col];
+			Glyph * gp = &term.line[row][col];
 			if (gp->mode & ATTR_IMAGE) {
 				uint32_t cell_image_id = tgetimgid(gp);
 				if (cell_image_id == image_id) {
@@ -1553,7 +1554,7 @@ void gr_schedule_image_redraw_by_id(uint32_t image_id) {
 
 void tdeletechar(int n) {
 	int dst, src, size;
-	Glyph *line;
+	Glyph * line;
 
 	LIMIT(n, 0, term.col - term.c.x);
 
@@ -1568,7 +1569,7 @@ void tdeletechar(int n) {
 
 void tinsertblank(int n) {
 	int dst, src, size;
-	Glyph *line;
+	Glyph * line;
 
 	LIMIT(n, 0, term.col - term.c.x);
 
@@ -1602,7 +1603,7 @@ void tdeleteline(int n) {
 	}
 }
 
-int32_t tdefcolor(const int *attr, int *npar, int l) {
+int32_t tdefcolor(const int * attr, int * npar, int l) {
 	int32_t idx = -1;
 	uint r, g, b;
 
@@ -1657,7 +1658,7 @@ int32_t tdefcolor(const int *attr, int *npar, int l) {
 	return idx;
 }
 
-void tsetattr(const int *attr, int l) {
+void tsetattr(const int * attr, int l) {
 	int i;
 	int32_t idx;
 
@@ -1788,9 +1789,9 @@ void tsetscroll(int t, int b) {
 	term.bot = b;
 }
 
-void tsetmode(int priv, int set, const int *args, int narg) {
+void tsetmode(int priv, int set, const int * args, int narg) {
 	int alt;
-	const int *lim;
+	const int * lim;
 
 	for (lim = args + narg; args < lim; ++args) {
 		if (priv) {
@@ -2328,7 +2329,7 @@ void strhandle(void) {
 	int j, narg, par;
 	const struct {
 		int idx;
-		char *str;
+		char * str;
 	} osc_table[] = {{defaultfg, "foreground"}, {defaultbg, "background"}, {defaultcs, "cursor"}};
 	ImageList *im, *newimages, *next, *tail = NULL;
 	int i, x1, y1, x2, y2, y, numimages;
@@ -2524,7 +2525,7 @@ void strhandle(void) {
 		return;
 	case '_': /* APC -- Application Program Command */
 		if (gr_parse_command(strescseq.buf, strescseq.len)) {
-			GraphicsCommandResult *res = &graphics_command_result;
+			GraphicsCommandResult * res = &graphics_command_result;
 			if (res->create_placeholder) {
 				tcreateimgplaceholder(res->placeholder.image_id, res->placeholder.placement_id,
 				                      res->placeholder.columns, res->placeholder.rows,
@@ -2550,7 +2551,7 @@ void strhandle(void) {
 
 void strparse(void) {
 	int c;
-	char *p = strescseq.buf;
+	char * p = strescseq.buf;
 
 	strescseq.narg               = 0;
 	strescseq.buf[strescseq.len] = '\0';
@@ -2611,13 +2612,13 @@ void strreset(void) {
 	};
 }
 
-void sendbreak(const Arg *arg) {
+void sendbreak(const Arg * arg) {
 	if (tcsendbreak(cmdfd, 0)) {
 		perror("Error sending break");
 	}
 }
 
-void tprinter(char *s, size_t len) {
+void tprinter(char * s, size_t len) {
 	if (iofd != -1 && xwrite(iofd, s, len) < 0) {
 		perror("Error writing to output file");
 		close(iofd);
@@ -2625,20 +2626,20 @@ void tprinter(char *s, size_t len) {
 	}
 }
 
-void toggleprinter(const Arg *arg) {
+void toggleprinter(const Arg * arg) {
 	term.mode ^= MODE_PRINT;
 }
 
-void printscreen(const Arg *arg) {
+void printscreen(const Arg * arg) {
 	tdump();
 }
 
-void printsel(const Arg *arg) {
+void printsel(const Arg * arg) {
 	tdumpsel();
 }
 
 void tdumpsel(void) {
-	char *ptr;
+	char * ptr;
 
 	if ((ptr = getsel())) {
 		tprinter(ptr, strlen(ptr));
@@ -2696,7 +2697,7 @@ void tdefutf8(char ascii) {
 void tdeftran(char ascii) {
 	static char cs[] = "0B";
 	static int vcs[] = {CS_GRAPHIC0, CS_USA};
-	char *p;
+	char * p;
 
 	if ((p = strchr(cs, ascii)) == NULL) {
 		fprintf(stderr, "esc unhandled charset: ESC ( %c\n", ascii);
@@ -2960,7 +2961,7 @@ void tputc(Rune u) {
 	char c[UTF_SIZ];
 	int control;
 	int width, len;
-	Glyph *gp;
+	Glyph * gp;
 
 	control = ISCONTROL(u);
 	if (u < 127 || !IS_SET(MODE_UTF8)) {
@@ -3150,7 +3151,7 @@ check_control_code:
 	}
 }
 
-int twrite(const char *buf, int buflen, int show_ctrl) {
+int twrite(const char * buf, int buflen, int show_ctrl) {
 	int charsize;
 	Rune u;
 	int n;
@@ -3195,7 +3196,7 @@ void tresize(int col, int row) {
 	int i, j;
 	int minrow = MIN(row, term.row);
 	int mincol = MIN(col, term.col);
-	int *bp;
+	int * bp;
 	int x2;
 	Line line;
 	ImageList *im, *next;

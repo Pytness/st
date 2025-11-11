@@ -50,7 +50,7 @@ void scroll_images(int n) {
 	}
 }
 
-void delete_image(ImageList *im) {
+void delete_image(ImageList * im) {
 	if (im->prev) {
 		im->prev->next = im->next;
 	} else {
@@ -69,7 +69,7 @@ void delete_image(ImageList *im) {
 	free(im);
 }
 
-static int set_default_color(sixel_image_t *image) {
+static int set_default_color(sixel_image_t * image) {
 	int i;
 	int n;
 	int r;
@@ -102,7 +102,7 @@ static int set_default_color(sixel_image_t *image) {
 	return (0);
 }
 
-static int sixel_image_init(sixel_image_t *image, int width, int height, int fgcolor, int bgcolor,
+static int sixel_image_init(sixel_image_t * image, int width, int height, int fgcolor, int bgcolor,
                             int use_private_register) {
 	int status = (-1);
 	size_t size;
@@ -134,10 +134,10 @@ end:
 	return status;
 }
 
-static int image_buffer_resize(sixel_image_t *image, int width, int height) {
+static int image_buffer_resize(sixel_image_t * image, int width, int height) {
 	int status = (-1);
 	size_t size;
-	sixel_color_no_t *alt_buffer;
+	sixel_color_no_t * alt_buffer;
 	int n;
 	int min_height;
 
@@ -188,14 +188,14 @@ end:
 	return status;
 }
 
-static void sixel_image_deinit(sixel_image_t *image) {
+static void sixel_image_deinit(sixel_image_t * image) {
 	if (image->data) {
 		free(image->data);
 	}
 	image->data = NULL;
 }
 
-int sixel_parser_init(sixel_state_t *st, int transparent, sixel_color_t fgcolor, sixel_color_t bgcolor,
+int sixel_parser_init(sixel_state_t * st, int transparent, sixel_color_t fgcolor, sixel_color_t bgcolor,
                       unsigned char use_private_register, int cell_width, int cell_height) {
 	int status = (-1);
 
@@ -222,14 +222,14 @@ int sixel_parser_init(sixel_state_t *st, int transparent, sixel_color_t fgcolor,
 	return status;
 }
 
-int sixel_parser_set_default_color(sixel_state_t *st) {
+int sixel_parser_set_default_color(sixel_state_t * st) {
 	return set_default_color(&st->image);
 }
 
-int sixel_parser_finalize(sixel_state_t *st, ImageList **newimages, int cx, int cy, int cw, int ch) {
-	sixel_image_t *image = &st->image;
+int sixel_parser_finalize(sixel_state_t * st, ImageList ** newimages, int cx, int cy, int cw, int ch) {
+	sixel_image_t * image = &st->image;
 	int x, y;
-	sixel_color_no_t *src;
+	sixel_color_no_t * src;
 	sixel_color_t *dst, color;
 	int w, h;
 	int i, j, cols, numimages;
@@ -313,7 +313,7 @@ int sixel_parser_finalize(sixel_state_t *st, ImageList **newimages, int cx, int 
 }
 
 /* convert sixel data into indexed pixel bytes and palette data */
-int sixel_parser_parse(sixel_state_t *st, const unsigned char *p, size_t len) {
+int sixel_parser_parse(sixel_state_t * st, const unsigned char * p, size_t len) {
 	int n = 0;
 	int i;
 	int x;
@@ -325,7 +325,7 @@ int sixel_parser_parse(sixel_state_t *st, const unsigned char *p, size_t len) {
 	int pos;
 	int width;
 	const unsigned char *p0 = p, *p2 = p + len;
-	sixel_image_t *image = &st->image;
+	sixel_image_t * image = &st->image;
 	sixel_color_no_t *data, color_index;
 
 	if (!image->data) {
@@ -654,17 +654,17 @@ end:
 	return p - p0;
 }
 
-void sixel_parser_deinit(sixel_state_t *st) {
+void sixel_parser_deinit(sixel_state_t * st) {
 	if (st) {
 		sixel_image_deinit(&st->image);
 	}
 }
 
-Pixmap sixel_create_clipmask(char *pixels, int width, int height) {
+Pixmap sixel_create_clipmask(char * pixels, int width, int height) {
 	char c, *clipdata, *dst;
 	int b, i, n, y, w;
-	int msb            = (XBitmapBitOrder(xw.dpy) == MSBFirst);
-	sixel_color_t *src = (sixel_color_t *)pixels;
+	int msb             = (XBitmapBitOrder(xw.dpy) == MSBFirst);
+	sixel_color_t * src = (sixel_color_t *)pixels;
 	Pixmap clipmask;
 
 	clipdata = dst = malloc((width + 7) / 8 * height);
