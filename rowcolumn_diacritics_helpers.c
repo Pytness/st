@@ -1,7 +1,6 @@
 #include <stdint.h>
 
-uint16_t diacritic_to_num(uint32_t code)
-{
+uint16_t diacritic_to_num(uint32_t code) {
 	switch (code) {
 	case 0x305:
 		return code - 0x305 + 1;

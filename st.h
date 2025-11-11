@@ -11,26 +11,25 @@
 #include <X11/XKBlib.h>
 
 /* macros */
-#define MIN(a, b)		((a) < (b) ? (a) : (b))
-#define MAX(a, b)		((a) < (b) ? (b) : (a))
-#define LEN(a)			(sizeof(a) / sizeof(a)[0])
-#define BETWEEN(x, a, b)	((a) <= (x) && (x) <= (b))
-#define DIVCEIL(n, d)		(((n) + ((d) - 1)) / (d))
-#define DEFAULT(a, b)		(a) = (a) ? (a) : (b)
-#define LIMIT(x, a, b)		(x) = (x) < (a) ? (a) : (x) > (b) ? (b) : (x)
-#define ATTRCMP(a, b)		(((a).mode & (~ATTR_WRAP)) != ((b).mode & (~ATTR_WRAP)) || \
-				(a).fg != (b).fg || \
-				(a).bg != (b).bg || (a).decor != (b).decor)
-#define TIMEDIFF(t1, t2)	((t1.tv_sec-t2.tv_sec)*1000 + \
-				(t1.tv_nsec-t2.tv_nsec)/1E6)
-#define MODBIT(x, set, bit)	((set) ? ((x) |= (bit)) : ((x) &= ~(bit)))
+#define MIN(a, b)        ((a) < (b) ? (a) : (b))
+#define MAX(a, b)        ((a) < (b) ? (b) : (a))
+#define LEN(a)           (sizeof(a) / sizeof(a)[0])
+#define BETWEEN(x, a, b) ((a) <= (x) && (x) <= (b))
+#define DIVCEIL(n, d)    (((n) + ((d) - 1)) / (d))
+#define DEFAULT(a, b)    (a) = (a) ? (a) : (b)
+#define LIMIT(x, a, b)   (x) = (x)<(a) ? (a) : (x)>(b) ? (b) : (x)
+#define ATTRCMP(a, b)                                                                                                  \
+	(((a).mode & (~ATTR_WRAP)) != ((b).mode & (~ATTR_WRAP)) || (a).fg != (b).fg || (a).bg != (b).bg ||             \
+	 (a).decor != (b).decor)
+#define TIMEDIFF(t1, t2)    ((t1.tv_sec - t2.tv_sec) * 1000 + (t1.tv_nsec - t2.tv_nsec) / 1E6)
+#define MODBIT(x, set, bit) ((set) ? ((x) |= (bit)) : ((x) &= ~(bit)))
 
-#define TRUECOLOR(r,g,b)	(1 << 24 | (r) << 16 | (g) << 8 | (b))
-#define IS_TRUECOL(x)		(1 << 24 & (x))
+#define TRUECOLOR(r, g, b) (1 << 24 | (r) << 16 | (g) << 8 | (b))
+#define IS_TRUECOL(x)      (1 << 24 & (x))
 
 // This decor color indicates that the fg color should be used. Note that it's
 // not a 24-bit color because the 25-th bit is not set.
-#define DECOR_DEFAULT_COLOR	0x0ffffff
+#define DECOR_DEFAULT_COLOR 0x0ffffff
 
 enum glyph_attribute {
 	ATTR_NULL       = 0,
@@ -75,19 +74,19 @@ enum screen {
 };
 
 enum drawing_mode {
-    DRAW_NONE = 0,
-    DRAW_BG = 1 << 0,
-    DRAW_FG = 1 << 1,
+	DRAW_NONE = 0,
+	DRAW_BG   = 1 << 0,
+	DRAW_FG   = 1 << 1,
 };
 
 enum selection_mode {
-	SEL_IDLE = 0,
+	SEL_IDLE  = 0,
 	SEL_EMPTY = 1,
 	SEL_READY = 2
 };
 
 enum selection_type {
-	SEL_REGULAR = 1,
+	SEL_REGULAR     = 1,
 	SEL_RECTANGULAR = 2
 };
 
@@ -98,10 +97,10 @@ enum selection_snap {
 
 enum underline_style {
 	UNDERLINE_STRAIGHT = 1,
-	UNDERLINE_DOUBLE = 2,
-	UNDERLINE_CURLY = 3,
-	UNDERLINE_DOTTED = 4,
-	UNDERLINE_DASHED = 5,
+	UNDERLINE_DOUBLE   = 2,
+	UNDERLINE_CURLY    = 3,
+	UNDERLINE_DOTTED   = 4,
+	UNDERLINE_DASHED   = 5,
 };
 
 typedef unsigned char uchar;
@@ -117,11 +116,11 @@ typedef XftGlyphFontSpec GlyphFontSpec;
 
 #define Glyph Glyph_
 typedef struct {
-	Rune u;           /* character code */
-	uint32_t mode;    /* attribute flags */
-	uint32_t fg;      /* foreground  */
-	uint32_t bg;      /* background  */
-	uint32_t decor;   /* decoration (like underline) */
+	Rune u;         /* character code */
+	uint32_t mode;  /* attribute flags */
+	uint32_t fg;    /* foreground  */
+	uint32_t bg;    /* background  */
+	uint32_t decor; /* decoration (like underline) */
 } Glyph;
 
 typedef Glyph *Line;
@@ -135,27 +134,27 @@ typedef struct {
 
 /* Internal representation of the screen */
 typedef struct {
-	int row;      /* nb row */
-	int col;      /* nb col */
-	int pixw;     /* width of the text area in pixels */
-	int pixh;     /* height of the text area in pixels */
-	Line *line;   /* screen */
-	Line *alt;    /* alternate screen */
-	int *dirty;   /* dirtyness of lines */
-	TCursor c;    /* cursor */
-	int ocx;      /* old cursor col */
-	int ocy;      /* old cursor row */
-	int top;      /* top    scroll limit */
-	int bot;      /* bottom scroll limit */
-	int mode;     /* terminal mode flags */
-	int esc;      /* escape state flags */
+	int row;         /* nb row */
+	int col;         /* nb col */
+	int pixw;        /* width of the text area in pixels */
+	int pixh;        /* height of the text area in pixels */
+	Line *line;      /* screen */
+	Line *alt;       /* alternate screen */
+	int *dirty;      /* dirtyness of lines */
+	TCursor c;       /* cursor */
+	int ocx;         /* old cursor col */
+	int ocy;         /* old cursor row */
+	int top;         /* top    scroll limit */
+	int bot;         /* bottom scroll limit */
+	int mode;        /* terminal mode flags */
+	int esc;         /* escape state flags */
 	char trantbl[4]; /* charset table translation */
-	int charset;  /* current charset */
-	int icharset; /* selected charset for sequence */
+	int charset;     /* current charset */
+	int icharset;    /* selected charset for sequence */
 	int *tabs;
 	ImageList *images;     /* sixel images */
 	ImageList *images_alt; /* sixel images for alternate screen */
-	Rune lastc;   /* last printed char outside of sequence, 0 if control */
+	Rune lastc;            /* last printed char outside of sequence, 0 if control */
 } Term;
 
 typedef union {
@@ -169,11 +168,11 @@ typedef union {
 /* Purely graphic info */
 typedef struct {
 	int tw, th; /* tty width and height */
-	int w, h; /* window width and height */
+	int w, h;   /* window width and height */
 	int hborderpx, vborderpx;
-	int ch; /* char height */
-	int cw; /* char width  */
-	int mode; /* window state/mode flags */
+	int ch;     /* char height */
+	int cw;     /* char width  */
+	int mode;   /* window state/mode flags */
 	int cursor; /* cursor style */
 } TermWindow;
 
@@ -195,8 +194,8 @@ typedef struct {
 	XSetWindowAttributes attrs;
 	int scr;
 	int isfixed; /* is fixed geometry? */
-	int l, t; /* left and top offset */
-	int gm; /* geometry mask */
+	int l, t;    /* left and top offset */
+	int gm;      /* geometry mask */
 } XWindow;
 
 typedef struct {
@@ -341,7 +340,6 @@ static inline void tsetdecorstyle(Glyph *g, uint32_t style) {
 	g->decor = (g->decor & ~(0x7 << 25)) | ((style & 0x7) << 25);
 }
 
-
 // Some accessors to image placeholder properties stored in `u`:
 // - row (1-base) - 9 bits
 // - column (1-base) - 9 bits
@@ -354,12 +352,8 @@ static inline uint32_t tgetimgcol(Glyph *g) { return (g->u >> 9) & 0x1ff; }
 static inline uint32_t tgetimgid4thbyteplus1(Glyph *g) { return (g->u >> 18) & 0x1ff; }
 static inline uint32_t tgetimgdiacriticcount(Glyph *g) { return (g->u >> 27) & 0x3; }
 static inline uint32_t tgetisclassicplaceholder(Glyph *g) { return (g->u >> 29) & 0x1; }
-static inline void tsetimgrow(Glyph *g, uint32_t row) {
-	g->u = (g->u & ~0x1ff) | (row & 0x1ff);
-}
-static inline void tsetimgcol(Glyph *g, uint32_t col) {
-	g->u = (g->u & ~(0x1ff << 9)) | ((col & 0x1ff) << 9);
-}
+static inline void tsetimgrow(Glyph *g, uint32_t row) { g->u = (g->u & ~0x1ff) | (row & 0x1ff); }
+static inline void tsetimgcol(Glyph *g, uint32_t col) { g->u = (g->u & ~(0x1ff << 9)) | ((col & 0x1ff) << 9); }
 static inline void tsetimg4thbyteplus1(Glyph *g, uint32_t byteplus1) {
 	g->u = (g->u & ~(0x1ff << 18)) | ((byteplus1 & 0x1ff) << 18);
 }
@@ -392,9 +386,7 @@ static inline uint32_t tgetimgplacementid(Glyph *g) {
 	return g->decor & 0xFFFFFF;
 }
 
-static inline void tsetimgplacementid(Glyph *g, uint32_t id) {
-	g->decor = (id & 0xFFFFFF) | (1 << 24);
-}
+static inline void tsetimgplacementid(Glyph *g, uint32_t id) { g->decor = (id & 0xFFFFFF) | (1 << 24); }
 extern const int boxdraw, boxdraw_bold, boxdraw_braille;
 
 extern DC dc;

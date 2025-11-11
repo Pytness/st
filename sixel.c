@@ -3,38 +3,37 @@
 // Licensed under the terms of the GNU General Public License v3 or later.
 
 #include <stdlib.h>
-#include <string.h>  /* memcpy */
+#include <string.h> /* memcpy */
 
 #include "st.h"
 #include "win.h"
 #include "sixel.h"
 #include "sixel_hls.h"
 
-#define SIXEL_RGB(r, g, b) ((255 << 24) + ((r) << 16) + ((g) << 8) +  (b))
-#define SIXEL_PALVAL(n,a,m) (((n) * (a) + ((m) / 2)) / (m))
-#define SIXEL_XRGB(r,g,b) SIXEL_RGB(SIXEL_PALVAL(r, 255, 100), SIXEL_PALVAL(g, 255, 100), SIXEL_PALVAL(b, 255, 100))
+#define SIXEL_RGB(r, g, b)    ((255 << 24) + ((r) << 16) + ((g) << 8) + (b))
+#define SIXEL_PALVAL(n, a, m) (((n) * (a) + ((m) / 2)) / (m))
+#define SIXEL_XRGB(r, g, b)   SIXEL_RGB(SIXEL_PALVAL(r, 255, 100), SIXEL_PALVAL(g, 255, 100), SIXEL_PALVAL(b, 255, 100))
 
 static sixel_color_t const sixel_default_color_table[] = {
-	SIXEL_XRGB( 0,  0,  0),  /*  0 Black    */
-	SIXEL_XRGB(20, 20, 80),  /*  1 Blue     */
-	SIXEL_XRGB(80, 13, 13),  /*  2 Red      */
-	SIXEL_XRGB(20, 80, 20),  /*  3 Green    */
-	SIXEL_XRGB(80, 20, 80),  /*  4 Magenta  */
-	SIXEL_XRGB(20, 80, 80),  /*  5 Cyan     */
-	SIXEL_XRGB(80, 80, 20),  /*  6 Yellow   */
-	SIXEL_XRGB(53, 53, 53),  /*  7 Gray 50% */
-	SIXEL_XRGB(26, 26, 26),  /*  8 Gray 25% */
-	SIXEL_XRGB(33, 33, 60),  /*  9 Blue*    */
-	SIXEL_XRGB(60, 26, 26),  /* 10 Red*     */
-	SIXEL_XRGB(33, 60, 33),  /* 11 Green*   */
-	SIXEL_XRGB(60, 33, 60),  /* 12 Magenta* */
-	SIXEL_XRGB(33, 60, 60),  /* 13 Cyan*    */
-	SIXEL_XRGB(60, 60, 33),  /* 14 Yellow*  */
-	SIXEL_XRGB(80, 80, 80),  /* 15 Gray 75% */
+        SIXEL_XRGB(0, 0, 0),    /*  0 Black    */
+        SIXEL_XRGB(20, 20, 80), /*  1 Blue     */
+        SIXEL_XRGB(80, 13, 13), /*  2 Red      */
+        SIXEL_XRGB(20, 80, 20), /*  3 Green    */
+        SIXEL_XRGB(80, 20, 80), /*  4 Magenta  */
+        SIXEL_XRGB(20, 80, 80), /*  5 Cyan     */
+        SIXEL_XRGB(80, 80, 20), /*  6 Yellow   */
+        SIXEL_XRGB(53, 53, 53), /*  7 Gray 50% */
+        SIXEL_XRGB(26, 26, 26), /*  8 Gray 25% */
+        SIXEL_XRGB(33, 33, 60), /*  9 Blue*    */
+        SIXEL_XRGB(60, 26, 26), /* 10 Red*     */
+        SIXEL_XRGB(33, 60, 33), /* 11 Green*   */
+        SIXEL_XRGB(60, 33, 60), /* 12 Magenta* */
+        SIXEL_XRGB(33, 60, 60), /* 13 Cyan*    */
+        SIXEL_XRGB(60, 60, 33), /* 14 Yellow*  */
+        SIXEL_XRGB(80, 80, 80), /* 15 Gray 75% */
 };
 
-void
-scroll_images(int n) {
+void scroll_images(int n) {
 	ImageList *im, *next;
 	int top = 0;
 
@@ -45,15 +44,13 @@ scroll_images(int n) {
 		/* check if the current sixel has exceeded the maximum
 		 * draw distance, and should therefore be deleted */
 		if (im->y < top) {
-			//fprintf(stderr, "im@0x%08x exceeded maximum distance\n");
+			// fprintf(stderr, "im@0x%08x exceeded maximum distance\n");
 			delete_image(im);
 		}
 	}
 }
 
-void
-delete_image(ImageList *im)
-{
+void delete_image(ImageList *im) {
 	if (im->prev)
 		im->prev->next = im->next;
 	else
@@ -68,9 +65,7 @@ delete_image(ImageList *im)
 	free(im);
 }
 
-static int
-set_default_color(sixel_image_t *image)
-{
+static int set_default_color(sixel_image_t *image) {
 	int i;
 	int n;
 	int r;
@@ -103,23 +98,16 @@ set_default_color(sixel_image_t *image)
 	return (0);
 }
 
-static int
-sixel_image_init(
-    sixel_image_t    *image,
-    int              width,
-    int              height,
-    int              fgcolor,
-    int              bgcolor,
-    int              use_private_register)
-{
+static int sixel_image_init(sixel_image_t *image, int width, int height, int fgcolor, int bgcolor,
+                            int use_private_register) {
 	int status = (-1);
 	size_t size;
 
-	size = (size_t)(width * height) * sizeof(sixel_color_no_t);
-	image->width = width;
-	image->height = height;
-	image->data = (sixel_color_no_t *)malloc(size);
-	image->ncolors = 2;
+	size                        = (size_t)(width * height) * sizeof(sixel_color_no_t);
+	image->width                = width;
+	image->height               = height;
+	image->data                 = (sixel_color_no_t *)malloc(size);
+	image->ncolors              = 2;
 	image->use_private_register = use_private_register;
 
 	if (image->data == NULL) {
@@ -141,61 +129,52 @@ end:
 	return status;
 }
 
-static int
-image_buffer_resize(
-    sixel_image_t   *image,
-    int              width,
-    int              height)
-{
+static int image_buffer_resize(sixel_image_t *image, int width, int height) {
 	int status = (-1);
 	size_t size;
 	sixel_color_no_t *alt_buffer;
 	int n;
 	int min_height;
 
-	size = (size_t)(width * height) * sizeof(sixel_color_no_t);
+	size       = (size_t)(width * height) * sizeof(sixel_color_no_t);
 	alt_buffer = (sixel_color_no_t *)malloc(size);
 	if (alt_buffer == NULL) {
 		/* free source image */
 		free(image->data);
 		image->data = NULL;
-		status = (-1);
+		status      = (-1);
 		goto end;
 	}
 
-	min_height = height > image->height ? image->height: height;
-	if (width > image->width) {  /* if width is extended */
+	min_height = height > image->height ? image->height : height;
+	if (width > image->width) { /* if width is extended */
 		for (n = 0; n < min_height; ++n) {
 			/* copy from source image */
-			memcpy(alt_buffer + width * n,
-			       image->data + image->width * n,
+			memcpy(alt_buffer + width * n, image->data + image->width * n,
 			       (size_t)image->width * sizeof(sixel_color_no_t));
 			/* fill extended area with background color */
-			memset(alt_buffer + width * n + image->width,
-			       0,
+			memset(alt_buffer + width * n + image->width, 0,
 			       (size_t)(width - image->width) * sizeof(sixel_color_no_t));
 		}
 	} else {
 		for (n = 0; n < min_height; ++n) {
 			/* copy from source image */
-			memcpy(alt_buffer + width * n,
-			       image->data + image->width * n,
+			memcpy(alt_buffer + width * n, image->data + image->width * n,
 			       (size_t)width * sizeof(sixel_color_no_t));
 		}
 	}
 
-	if (height > image->height) {  /* if height is extended */
+	if (height > image->height) { /* if height is extended */
 		/* fill extended area with background color */
-		memset(alt_buffer + width * image->height,
-		       0,
+		memset(alt_buffer + width * image->height, 0,
 		       (size_t)(width * (height - image->height)) * sizeof(sixel_color_no_t));
 	}
 
 	/* free source image */
 	free(image->data);
 
-	image->data = alt_buffer;
-	image->width = width;
+	image->data   = alt_buffer;
+	image->width  = width;
 	image->height = height;
 
 	status = (0);
@@ -204,39 +183,32 @@ end:
 	return status;
 }
 
-static void
-sixel_image_deinit(sixel_image_t *image)
-{
+static void sixel_image_deinit(sixel_image_t *image) {
 	if (image->data)
 		free(image->data);
 	image->data = NULL;
 }
 
-int
-sixel_parser_init(sixel_state_t *st,
-                  int transparent,
-                  sixel_color_t fgcolor, sixel_color_t bgcolor,
-                  unsigned char use_private_register,
-                  int cell_width, int cell_height)
-{
+int sixel_parser_init(sixel_state_t *st, int transparent, sixel_color_t fgcolor, sixel_color_t bgcolor,
+                      unsigned char use_private_register, int cell_width, int cell_height) {
 	int status = (-1);
 
-	st->state = PS_DECSIXEL;
-	st->pos_x = 0;
-	st->pos_y = 0;
-	st->max_x = 0;
-	st->max_y = 0;
+	st->state          = PS_DECSIXEL;
+	st->pos_x          = 0;
+	st->pos_y          = 0;
+	st->max_x          = 0;
+	st->max_y          = 0;
 	st->attributed_pan = 2;
 	st->attributed_pad = 1;
-	st->attributed_ph = 0;
-	st->attributed_pv = 0;
-	st->transparent = transparent;
-	st->repeat_count = 1;
-	st->color_index = 16;
-	st->grid_width = cell_width;
-	st->grid_height = cell_height;
-	st->nparams = 0;
-	st->param = 0;
+	st->attributed_ph  = 0;
+	st->attributed_pv  = 0;
+	st->transparent    = transparent;
+	st->repeat_count   = 1;
+	st->color_index    = 16;
+	st->grid_width     = cell_width;
+	st->grid_height    = cell_height;
+	st->nparams        = 0;
+	st->param          = 0;
 
 	/* buffer initialization */
 	status = sixel_image_init(&st->image, 1, 1, fgcolor, transparent ? 0 : bgcolor, use_private_register);
@@ -244,15 +216,9 @@ sixel_parser_init(sixel_state_t *st,
 	return status;
 }
 
-int
-sixel_parser_set_default_color(sixel_state_t *st)
-{
-	return set_default_color(&st->image);
-}
+int sixel_parser_set_default_color(sixel_state_t *st) { return set_default_color(&st->image); }
 
-int
-sixel_parser_finalize(sixel_state_t *st, ImageList **newimages, int cx, int cy, int cw, int ch)
-{
+int sixel_parser_finalize(sixel_state_t *st, ImageList **newimages, int cx, int cy, int cw, int ch) {
 	sixel_image_t *image = &st->image;
 	int x, y;
 	sixel_color_no_t *src;
@@ -279,10 +245,10 @@ sixel_parser_finalize(sixel_state_t *st, ImageList **newimages, int cx, int cy, 
 	w = MIN(st->max_x, image->width);
 	h = MIN(st->max_y, image->height);
 
-	if ((numimages = (h + ch-1) / ch) <= 0)
+	if ((numimages = (h + ch - 1) / ch) <= 0)
 		return -1;
 
-	cols = (w + cw-1) / cw;
+	cols = (w + cw - 1) / cw;
 
 	*newimages = NULL, tail = NULL;
 	for (y = 0, i = 0; i < numimages; i++) {
@@ -292,20 +258,20 @@ sixel_parser_finalize(sixel_state_t *st, ImageList **newimages, int cx, int cy, 
 				im->prev = im->next = NULL;
 			} else {
 				tail->next = im;
-				im->prev = tail;
-				im->next = NULL;
-				tail = im;
+				im->prev   = tail;
+				im->next   = NULL;
+				tail       = im;
 			}
-			im->x = cx;
-			im->y = cy + i;
-			im->cols = cols;
-			im->width = w;
-			im->height = MIN(h - ch * i, ch);
-			im->pixels = malloc(im->width * im->height * 4);
-			im->pixmap = NULL;
+			im->x        = cx;
+			im->y        = cy + i;
+			im->cols     = cols;
+			im->width    = w;
+			im->height   = MIN(h - ch * i, ch);
+			im->pixels   = malloc(im->width * im->height * 4);
+			im->pixmap   = NULL;
 			im->clipmask = NULL;
-			im->cw = cw;
-			im->ch = ch;
+			im->cw       = cw;
+			im->ch       = ch;
 		}
 		if (!im || !im->pixels) {
 			for (im = *newimages; im; im = next) {
@@ -333,9 +299,7 @@ sixel_parser_finalize(sixel_state_t *st, ImageList **newimages, int cx, int cy, 
 }
 
 /* convert sixel data into indexed pixel bytes and palette data */
-int
-sixel_parser_parse(sixel_state_t *st, const unsigned char *p, size_t len)
-{
+int sixel_parser_parse(sixel_state_t *st, const unsigned char *p, size_t len) {
 	int n = 0;
 	int i;
 	int x;
@@ -364,21 +328,21 @@ sixel_parser_parse(sixel_state_t *st, const unsigned char *p, size_t len)
 				st->state = PS_ESC;
 				break;
 			case '"':
-				st->param = 0;
+				st->param   = 0;
 				st->nparams = 0;
-				st->state = PS_DECGRA;
+				st->state   = PS_DECGRA;
 				p++;
 				break;
 			case '!':
-				st->param = 0;
+				st->param   = 0;
 				st->nparams = 0;
-				st->state = PS_DECGRI;
+				st->state   = PS_DECGRI;
 				p++;
 				break;
 			case '#':
-				st->param = 0;
+				st->param   = 0;
 				st->nparams = 0;
-				st->state = PS_DECGCI;
+				st->state   = PS_DECGCI;
 				p++;
 				break;
 			case '$':
@@ -396,9 +360,10 @@ sixel_parser_parse(sixel_state_t *st, const unsigned char *p, size_t len)
 				p++;
 				break;
 			default:
-				if (*p >= '?' && *p <= '~') {  /* sixel characters */
-					if ((image->width < (st->pos_x + st->repeat_count) || image->height < (st->pos_y + 6))
-					        && image->width < DECSIXEL_WIDTH_MAX && image->height < DECSIXEL_HEIGHT_MAX) {
+				if (*p >= '?' && *p <= '~') { /* sixel characters */
+					if ((image->width < (st->pos_x + st->repeat_count) ||
+					     image->height < (st->pos_y + 6)) &&
+					    image->width < DECSIXEL_WIDTH_MAX && image->height < DECSIXEL_HEIGHT_MAX) {
 						sx = image->width * 2;
 						sy = image->height * 2;
 						while (sx < (st->pos_x + st->repeat_count) || sy < (st->pos_y + 6)) {
@@ -426,7 +391,7 @@ sixel_parser_parse(sixel_state_t *st, const unsigned char *p, size_t len)
 					if (st->repeat_count > 0 && st->pos_y + 5 < image->height) {
 						bits = *p - '?';
 						if (bits != 0) {
-							data = image->data + image->width * st->pos_y + st->pos_x;
+							data  = image->data + image->width * st->pos_y + st->pos_x;
 							width = image->width;
 							color_index = st->color_index;
 							if (st->repeat_count <= 1) {
@@ -518,8 +483,7 @@ sixel_parser_parse(sixel_state_t *st, const unsigned char *p, size_t len)
 				if (st->attributed_pad <= 0)
 					st->attributed_pad = 1;
 
-				if (image->width < st->attributed_ph ||
-				        image->height < st->attributed_pv) {
+				if (image->width < st->attributed_ph || image->height < st->attributed_pv) {
 					sx = MAX(image->width, st->attributed_ph);
 					sy = MAX(image->height, st->attributed_pv);
 
@@ -537,8 +501,8 @@ sixel_parser_parse(sixel_state_t *st, const unsigned char *p, size_t len)
 						break;
 					}
 				}
-				st->state = PS_DECSIXEL;
-				st->param = 0;
+				st->state   = PS_DECSIXEL;
+				st->param   = 0;
 				st->nparams = 0;
 			}
 			break;
@@ -565,9 +529,9 @@ sixel_parser_parse(sixel_state_t *st, const unsigned char *p, size_t len)
 				break;
 			default:
 				st->repeat_count = MAX(st->param, 1);
-				st->state = PS_DECSIXEL;
-				st->param = 0;
-				st->nparams = 0;
+				st->state        = PS_DECSIXEL;
+				st->param        = 0;
+				st->nparams      = 0;
 				break;
 			}
 			break;
@@ -605,7 +569,7 @@ sixel_parser_parse(sixel_state_t *st, const unsigned char *p, size_t len)
 				st->param = 0;
 
 				if (st->nparams > 0) {
-					st->color_index = 1 + st->params[0];  /* offset 1(background color) added */
+					st->color_index = 1 + st->params[0]; /* offset 1(background color) added */
 					if (st->color_index < 0)
 						st->color_index = 0;
 					else if (st->color_index >= DECSIXEL_PALETTE_MAX)
@@ -619,15 +583,15 @@ sixel_parser_parse(sixel_state_t *st, const unsigned char *p, size_t len)
 						st->params[2] = MIN(st->params[2], 360);
 						st->params[3] = MIN(st->params[3], 100);
 						st->params[4] = MIN(st->params[4], 100);
-						image->palette[st->color_index]
-						    = hls_to_rgb(st->params[2], st->params[3], st->params[4]);
+						image->palette[st->color_index] =
+						        hls_to_rgb(st->params[2], st->params[3], st->params[4]);
 					} else if (st->params[1] == 2) {
 						/* RGB */
 						st->params[2] = MIN(st->params[2], 100);
 						st->params[3] = MIN(st->params[3], 100);
 						st->params[4] = MIN(st->params[4], 100);
-						image->palette[st->color_index]
-						    = SIXEL_XRGB(st->params[2], st->params[3], st->params[4]);
+						image->palette[st->color_index] =
+						        SIXEL_XRGB(st->params[2], st->params[3], st->params[4]);
 					}
 				}
 				break;
@@ -650,23 +614,19 @@ end:
 	return p - p0;
 }
 
-void
-sixel_parser_deinit(sixel_state_t *st)
-{
+void sixel_parser_deinit(sixel_state_t *st) {
 	if (st)
 		sixel_image_deinit(&st->image);
 }
 
-Pixmap
-sixel_create_clipmask(char *pixels, int width, int height)
-{
+Pixmap sixel_create_clipmask(char *pixels, int width, int height) {
 	char c, *clipdata, *dst;
 	int b, i, n, y, w;
-	int msb = (XBitmapBitOrder(xw.dpy) == MSBFirst);
+	int msb            = (XBitmapBitOrder(xw.dpy) == MSBFirst);
 	sixel_color_t *src = (sixel_color_t *)pixels;
 	Pixmap clipmask;
 
-	clipdata = dst = malloc((width+7)/8 * height);
+	clipdata = dst = malloc((width + 7) / 8 * height);
 	if (!clipdata)
 		return (Pixmap)None;
 

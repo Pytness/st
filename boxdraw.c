@@ -20,24 +20,19 @@ static void drawboxlines(int, int, int, int, XftColor *, ushort);
 
 /* public API */
 
-void
-boxdraw_xinit(Display *dpy, Colormap cmap, XftDraw *draw, Visual *vis)
-{
-	xdpy = dpy; xcmap = cmap; xd = draw, xvis = vis;
+void boxdraw_xinit(Display *dpy, Colormap cmap, XftDraw *draw, Visual *vis) {
+	xdpy  = dpy;
+	xcmap = cmap;
+	xd = draw, xvis = vis;
 }
 
-int
-isboxdraw(Rune u)
-{
+int isboxdraw(Rune u) {
 	Rune block = u & ~0xff;
-	return (boxdraw && block == 0x2500 && boxdata[(uint8_t)u]) ||
-	       (boxdraw_braille && block == 0x2800);
+	return (boxdraw && block == 0x2500 && boxdata[(uint8_t)u]) || (boxdraw_braille && block == 0x2800);
 }
 
 /* the "index" is actually the entire shape data encoded as ushort */
-ushort
-boxdrawindex(const Glyph *g)
-{
+ushort boxdrawindex(const Glyph *g) {
 	if (boxdraw_braille && (g->u & ~0xff) == 0x2800)
 		return BRL | (uint8_t)g->u;
 	if (boxdraw_bold && (g->mode & ATTR_BOLD))
@@ -45,20 +40,15 @@ boxdrawindex(const Glyph *g)
 	return boxdata[(uint8_t)g->u];
 }
 
-void
-drawboxes(int x, int y, int cw, int ch, XftColor *fg, XftColor *bg,
-          const XftGlyphFontSpec *specs, int len)
-{
-	for ( ; len-- > 0; x += cw, specs++)
+void drawboxes(int x, int y, int cw, int ch, XftColor *fg, XftColor *bg, const XftGlyphFontSpec *specs, int len) {
+	for (; len-- > 0; x += cw, specs++)
 		drawbox(x, y, cw, ch, fg, bg, (ushort)specs->glyph);
 }
 
 /* implementation */
 
-void
-drawbox(int x, int y, int w, int h, XftColor *fg, XftColor *bg, ushort bd)
-{
-	ushort cat = bd & ~(BDB | 0xff);  /* mask out bold and data */
+void drawbox(int x, int y, int w, int h, XftColor *fg, XftColor *bg, ushort bd) {
+	ushort cat = bd & ~(BDB | 0xff); /* mask out bold and data */
 	if (bd & (BDL | BDA)) {
 		/* lines (light/double/heavy/arcs) */
 		drawboxlines(x, y, w, h, fg, bd);
@@ -97,11 +87,11 @@ drawbox(int x, int y, int w, int h, XftColor *fg, XftColor *bg, ushort bd)
 		/* Shades - data is 1/2/3 for 25%/50%/75% alpha, respectively */
 		int d = (uint8_t)bd;
 		XftColor xfc;
-		XRenderColor xrc = { .alpha = 0xffff };
+		XRenderColor xrc = {.alpha = 0xffff};
 
-		xrc.red = DIV(fg->color.red * d + bg->color.red * (4 - d), 4);
+		xrc.red   = DIV(fg->color.red * d + bg->color.red * (4 - d), 4);
 		xrc.green = DIV(fg->color.green * d + bg->color.green * (4 - d), 4);
-		xrc.blue = DIV(fg->color.blue * d + bg->color.blue * (4 - d), 4);
+		xrc.blue  = DIV(fg->color.blue * d + bg->color.blue * (4 - d), 4);
 
 		XftColorAllocValue(xdpy, xvis, xcmap, &xrc, &xfc);
 		XftDrawRect(xd, &xfc, x, y, w, h);
@@ -112,40 +102,45 @@ drawbox(int x, int y, int w, int h, XftColor *fg, XftColor *bg, ushort bd)
 		int w1 = DIV(w, 2);
 		int h1 = DIV(h, 4), h2 = DIV(h, 2), h3 = DIV(3 * h, 4);
 
-		if (bd & 1)   XftDrawRect(xd, fg, x, y, w1, h1);
-		if (bd & 2)   XftDrawRect(xd, fg, x, y + h1, w1, h2 - h1);
-		if (bd & 4)   XftDrawRect(xd, fg, x, y + h2, w1, h3 - h2);
-		if (bd & 8)   XftDrawRect(xd, fg, x + w1, y, w - w1, h1);
-		if (bd & 16)  XftDrawRect(xd, fg, x + w1, y + h1, w - w1, h2 - h1);
-		if (bd & 32)  XftDrawRect(xd, fg, x + w1, y + h2, w - w1, h3 - h2);
-		if (bd & 64)  XftDrawRect(xd, fg, x, y + h3, w1, h - h3);
-		if (bd & 128) XftDrawRect(xd, fg, x + w1, y + h3, w - w1, h - h3);
-
+		if (bd & 1)
+			XftDrawRect(xd, fg, x, y, w1, h1);
+		if (bd & 2)
+			XftDrawRect(xd, fg, x, y + h1, w1, h2 - h1);
+		if (bd & 4)
+			XftDrawRect(xd, fg, x, y + h2, w1, h3 - h2);
+		if (bd & 8)
+			XftDrawRect(xd, fg, x + w1, y, w - w1, h1);
+		if (bd & 16)
+			XftDrawRect(xd, fg, x + w1, y + h1, w - w1, h2 - h1);
+		if (bd & 32)
+			XftDrawRect(xd, fg, x + w1, y + h2, w - w1, h3 - h2);
+		if (bd & 64)
+			XftDrawRect(xd, fg, x, y + h3, w1, h - h3);
+		if (bd & 128)
+			XftDrawRect(xd, fg, x + w1, y + h3, w - w1, h - h3);
 	}
 }
 
-void
-drawboxlines(int x, int y, int w, int h, XftColor *fg, ushort bd)
-{
+void drawboxlines(int x, int y, int w, int h, XftColor *fg, ushort bd) {
 	/* s: stem thickness. width/8 roughly matches underscore thickness. */
 	/* We draw bold as 1.5 * normal-stem and at least 1px thicker.      */
 	/* doubles draw at least 3px, even when w or h < 3. bold needs 6px. */
-	int mwh = MIN(w, h);
+	int mwh    = MIN(w, h);
 	int base_s = MAX(1, DIV(mwh, 8));
-	int bold = (bd & BDB) && mwh >= 6;  /* possibly ignore boldness */
-	int s = bold ? MAX(base_s + 1, DIV(3 * base_s, 2)) : base_s;
+	int bold   = (bd & BDB) && mwh >= 6; /* possibly ignore boldness */
+	int s      = bold ? MAX(base_s + 1, DIV(3 * base_s, 2)) : base_s;
 	int w2 = DIV(w - s, 2), h2 = DIV(h - s, 2);
 	/* the s-by-s square (x + w2, y + h2, s, s) is the center texel.    */
 	/* The base length (per direction till edge) includes this square.  */
 
-	int light = bd & (LL | LU | LR | LD);
+	int light   = bd & (LL | LU | LR | LD);
 	int double_ = bd & (DL | DU | DR | DD);
 
 	if (light) {
 		/* d: additional (negative) length to not-draw the center   */
 		/* texel - at arcs and avoid drawing inside (some) doubles  */
-		int arc = bd & BDA;
-		int multi_light = light & (light - 1);
+		int arc          = bd & BDA;
+		int multi_light  = light & (light - 1);
 		int multi_double = double_ & (double_ - 1);
 		/* light crosses double only at DH+LV, DV+LH (ref. shapes)  */
 		int d = arc || (multi_double && !multi_light) ? -s : 0;
@@ -163,12 +158,12 @@ drawboxlines(int x, int y, int w, int h, XftColor *fg, ushort bd)
 	/* double lines - also align with light to form heavy when combined */
 	if (double_) {
 		/*
-		* going clockwise, for each double-ray: p is additional length
-		* to the single-ray nearer to the previous direction, and n to
-		* the next. p and n adjust from the base length to lengths
-		* which consider other doubles - shorter to avoid intersections
-		* (p, n), or longer to draw the far-corner texel (n).
-		*/
+		 * going clockwise, for each double-ray: p is additional length
+		 * to the single-ray nearer to the previous direction, and n to
+		 * the next. p and n adjust from the base length to lengths
+		 * which consider other doubles - shorter to avoid intersections
+		 * (p, n), or longer to draw the far-corner texel (n).
+		 */
 		int dl = bd & DL, du = bd & DU, dr = bd & DR, dd = bd & DD;
 		if (dl) {
 			int p = dd ? -s : 0, n = du ? -s : dd ? s : 0;
