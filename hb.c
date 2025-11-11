@@ -56,16 +56,18 @@ void hbunloadfonts() {
 
 hb_font_t *hbfindfont(XftFont *match) {
 	for (int i = 0; i < hbfontcache.capacity; i++) {
-		if (hbfontcache.fonts[i].match == match)
+		if (hbfontcache.fonts[i].match == match) {
 			return hbfontcache.fonts[i].font;
+		}
 	}
 
 	/* Font not found in cache, caching it now. */
 	hbfontcache.fonts = realloc(hbfontcache.fonts, sizeof(HbFontMatch) * (hbfontcache.capacity + 1));
 	FT_Face face      = XftLockFace(match);
 	hb_font_t *font   = hb_ft_font_create(face, NULL);
-	if (font == NULL)
+	if (font == NULL) {
 		die("Failed to load Harfbuzz font.");
+	}
 
 	hbfontcache.fonts[hbfontcache.capacity].match = match;
 	hbfontcache.fonts[hbfontcache.capacity].font  = font;
@@ -80,8 +82,9 @@ void hbtransform(HbTransformData *data, XftFont *xfont, const Glyph *glyphs, int
 	int rune_idx, glyph_idx, end = start + length;
 
 	hb_font_t *font = hbfindfont(xfont);
-	if (font == NULL)
+	if (font == NULL) {
 		return;
+	}
 
 	hb_buffer_t *buffer = hb_buffer_create();
 	hb_buffer_set_direction(buffer, HB_DIRECTION_LTR);
@@ -97,8 +100,9 @@ void hbtransform(HbTransformData *data, XftFont *xfont, const Glyph *glyphs, int
 	for (rune_idx = 0, glyph_idx = start; glyph_idx < end; glyph_idx++, rune_idx++) {
 		hbrunebuffer.runes[rune_idx] = glyphs[glyph_idx].u;
 		mode                         = glyphs[glyph_idx].mode;
-		if (mode & ATTR_WDUMMY)
+		if (mode & ATTR_WDUMMY) {
 			hbrunebuffer.runes[rune_idx] = 0x0020;
+		}
 	}
 	hb_buffer_add_codepoints(buffer, hbrunebuffer.runes, length, 0, length);
 

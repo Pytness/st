@@ -331,8 +331,12 @@ extern int nurlprefixes;
 
 // Accessors to decoration properties stored in `decor`.
 // The 25-th bit is used to indicate if it's a 24-bit color.
-static inline uint32_t tgetdecorcolor(Glyph *g) { return g->decor & 0x1ffffff; }
-static inline uint32_t tgetdecorstyle(Glyph *g) { return (g->decor >> 25) & 0x7; }
+static inline uint32_t tgetdecorcolor(Glyph *g) {
+	return g->decor & 0x1ffffff;
+}
+static inline uint32_t tgetdecorstyle(Glyph *g) {
+	return (g->decor >> 25) & 0x7;
+}
 static inline void tsetdecorcolor(Glyph *g, uint32_t color) {
 	g->decor = (g->decor & ~0x1ffffff) | (color & 0x1ffffff);
 }
@@ -347,13 +351,27 @@ static inline void tsetdecorstyle(Glyph *g, uint32_t style) {
 //   don't forget to subtract 1).
 // - the original number of diacritics (0, 1, 2, or 3) - 2 bits
 // - whether this is a classic (1) or Unicode (0) placeholder - 1 bit
-static inline uint32_t tgetimgrow(Glyph *g) { return g->u & 0x1ff; }
-static inline uint32_t tgetimgcol(Glyph *g) { return (g->u >> 9) & 0x1ff; }
-static inline uint32_t tgetimgid4thbyteplus1(Glyph *g) { return (g->u >> 18) & 0x1ff; }
-static inline uint32_t tgetimgdiacriticcount(Glyph *g) { return (g->u >> 27) & 0x3; }
-static inline uint32_t tgetisclassicplaceholder(Glyph *g) { return (g->u >> 29) & 0x1; }
-static inline void tsetimgrow(Glyph *g, uint32_t row) { g->u = (g->u & ~0x1ff) | (row & 0x1ff); }
-static inline void tsetimgcol(Glyph *g, uint32_t col) { g->u = (g->u & ~(0x1ff << 9)) | ((col & 0x1ff) << 9); }
+static inline uint32_t tgetimgrow(Glyph *g) {
+	return g->u & 0x1ff;
+}
+static inline uint32_t tgetimgcol(Glyph *g) {
+	return (g->u >> 9) & 0x1ff;
+}
+static inline uint32_t tgetimgid4thbyteplus1(Glyph *g) {
+	return (g->u >> 18) & 0x1ff;
+}
+static inline uint32_t tgetimgdiacriticcount(Glyph *g) {
+	return (g->u >> 27) & 0x3;
+}
+static inline uint32_t tgetisclassicplaceholder(Glyph *g) {
+	return (g->u >> 29) & 0x1;
+}
+static inline void tsetimgrow(Glyph *g, uint32_t row) {
+	g->u = (g->u & ~0x1ff) | (row & 0x1ff);
+}
+static inline void tsetimgcol(Glyph *g, uint32_t col) {
+	g->u = (g->u & ~(0x1ff << 9)) | ((col & 0x1ff) << 9);
+}
 static inline void tsetimg4thbyteplus1(Glyph *g, uint32_t byteplus1) {
 	g->u = (g->u & ~(0x1ff << 18)) | ((byteplus1 & 0x1ff) << 18);
 }
@@ -369,8 +387,9 @@ static inline void tsetisclassicplaceholder(Glyph *g, uint32_t isclassic) {
 /// it from the cells to the left.
 static inline uint32_t tgetimgid(Glyph *g) {
 	uint32_t msb = tgetimgid4thbyteplus1(g);
-	if (msb != 0)
+	if (msb != 0) {
 		--msb;
+	}
 	return (msb << 24) | (g->fg & 0xFFFFFF);
 }
 
@@ -381,12 +400,15 @@ static inline void tsetimgid(Glyph *g, uint32_t id) {
 }
 
 static inline uint32_t tgetimgplacementid(Glyph *g) {
-	if (tgetdecorcolor(g) == DECOR_DEFAULT_COLOR)
+	if (tgetdecorcolor(g) == DECOR_DEFAULT_COLOR) {
 		return 0;
+	}
 	return g->decor & 0xFFFFFF;
 }
 
-static inline void tsetimgplacementid(Glyph *g, uint32_t id) { g->decor = (id & 0xFFFFFF) | (1 << 24); }
+static inline void tsetimgplacementid(Glyph *g, uint32_t id) {
+	g->decor = (id & 0xFFFFFF) | (1 << 24);
+}
 extern const int boxdraw, boxdraw_bold, boxdraw_braille;
 
 extern DC dc;

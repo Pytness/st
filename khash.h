@@ -209,7 +209,9 @@ static const double __ac_HASH_UPPER = 0.77;
 	extern void kh_del_##name(kh_##name##_t *h, khint_t x);
 
 #define __KHASH_IMPL(name, SCOPE, khkey_t, khval_t, kh_is_map, __hash_func, __hash_equal)                              \
-	SCOPE kh_##name##_t *kh_init_##name(void) { return (kh_##name##_t *)kcalloc(1, sizeof(kh_##name##_t)); }       \
+	SCOPE kh_##name##_t *kh_init_##name(void) {                                                                    \
+		return (kh_##name##_t *)kcalloc(1, sizeof(kh_##name##_t));                                             \
+	}                                                                                                              \
 	SCOPE void kh_destroy_##name(kh_##name##_t *h) {                                                               \
 		if (h) {                                                                                               \
 			kfree((void *)h->keys);                                                                        \
@@ -435,9 +437,11 @@ static const double __ac_HASH_UPPER = 0.77;
  */
 static kh_inline khint_t __ac_X31_hash_string(const char *s) {
 	khint_t h = (khint_t)*s;
-	if (h)
-		for (++s; *s; ++s)
+	if (h) {
+		for (++s; *s; ++s) {
 			h = (h << 5) - h + (khint_t)*s;
+		}
+	}
 	return h;
 }
 /*! @function
