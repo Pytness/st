@@ -1,8 +1,11 @@
 CompileFlags:
   Add: [
     "-I/usr/include/x11/",
+    "-I/usr/X11R6/include",
     "-I/usr/include/freetype2/",
+    "-I/usr/include/libpng16",
     "-I/usr/include/harfbuzz/",
-    "-I/usr/include/"
-    "-I$INCLUDE_PATH"
+    "-I/usr/include/",
+    "-I$INCLUDE_PATH",
+    "-D_XOPEN_SOURCE=700",
   ]
