@@ -10,6 +10,10 @@
 #include <X11/Xft/Xft.h>
 #include <X11/XKBlib.h>
 
+#ifndef VERSION
+#define VERSION "<noversion>"
+#endif
+
 /* macros */
 #define MIN(a, b)        ((a) < (b) ? (a) : (b))
 #define MAX(a, b)        ((a) < (b) ? (b) : (a))
