@@ -743,34 +743,60 @@ followurl(int x, int y) {
 	for (int i = 0; i < term.col; i++) {
 		if (term.line[x][i].u < 127) {
 			linestr[i] = term.line[x][i].u;
-		}
-		linestr[term.col] = '\0';
-	}
-	int url_start = -1;
-	while ((match = strstrany(linestr + url_start + 1, urlprefixes))) {
-		url_start = match - linestr;
-		int url_end = url_start;
-		for (int c = url_start; c < term.col && strchr(urlchars, linestr[c]); c++) {
-			url_end++;
-		}
-		if (url_start <= y && y < url_end) {
-			linestr[url_end] = '\0';
-			break;
+		} else {
+			linestr[i] = ' ';
 		}
 	}
-	if (url_start == -1) {
+
+	linestr[term.col] = '\0';
+
+	int url_start = y;
+	int url_end = y;
+
+	/**
+	* The user cliecked at (x, y).
+	* We assume that the user clicked somewhere inside the URL.
+	* So we search for the URL prefixes in the line around the clicked position.
+	*/
+
+	// Search backwards from the clicked position to find the start
+	// of a valid urlchars substring
+	while (strchr(urlchars, linestr[url_start]) != NULL && url_start >= 0) {
+		fprintf(stderr, "Checking for URL prefix at %d: %c\n", url_start, linestr[url_start]);
+		url_start--;
+	}
+
+	// Find the end of a valid urlchars substring
+	while (strchr(urlchars, linestr[url_end]) != NULL && url_end < term.col) {
+		url_end++;
+	}
+
+	if (url_start < 0 || url_end > term.col || url_start == url_end) {
 		free(linestr);
 		return;
 	}
 
+	// Validate if its a valid URL
+	match = strstrany(linestr + url_start, urlprefixes);
+
+	if (match == NULL) {
+		free(linestr);
+		return;
+	}
+
+	match[url_end - url_start - 1] = '\0'; // Null-terminate the URL
+
 	pid_t chpid;
 	if ((chpid = fork()) == 0) {
 		if (fork() == 0)
-			execlp(urlhandler, urlhandler, linestr + url_start, NULL);
+			execlp(urlhandler, urlhandler, match, NULL);
 		exit(1);
 	}
-	if (chpid > 0)
+
+	if (chpid > 0) {
 		waitpid(chpid, NULL, 0);
+	};
+
 	free(linestr);
 	unhighlighturls();
 }
