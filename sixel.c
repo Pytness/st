@@ -51,16 +51,20 @@ void scroll_images(int n) {
 }
 
 void delete_image(ImageList *im) {
-	if (im->prev)
+	if (im->prev) {
 		im->prev->next = im->next;
-	else
+	} else {
 		term.images = im->next;
-	if (im->next)
+	}
+	if (im->next) {
 		im->next->prev = im->prev;
-	if (im->pixmap)
+	}
+	if (im->pixmap) {
 		XFreePixmap(xw.dpy, (Drawable)im->pixmap);
-	if (im->clipmask)
+	}
+	if (im->clipmask) {
 		XFreePixmap(xw.dpy, (Drawable)im->clipmask);
+	}
 	free(im->pixels);
 	free(im);
 }
@@ -118,8 +122,9 @@ static int sixel_image_init(sixel_image_t *image, int width, int height, int fgc
 
 	image->palette[0] = bgcolor;
 
-	if (image->use_private_register)
+	if (image->use_private_register) {
 		image->palette[1] = fgcolor;
+	}
 
 	image->palette_modified = 0;
 
@@ -184,8 +189,9 @@ end:
 }
 
 static void sixel_image_deinit(sixel_image_t *image) {
-	if (image->data)
+	if (image->data) {
 		free(image->data);
+	}
 	image->data = NULL;
 }
 
@@ -228,25 +234,30 @@ int sixel_parser_finalize(sixel_state_t *st, ImageList **newimages, int cx, int 
 	char trans;
 	ImageList *im, *next, *tail;
 
-	if (!image->data)
+	if (!image->data) {
 		return -1;
+	}
 
-	if (++st->max_x < st->attributed_ph)
+	if (++st->max_x < st->attributed_ph) {
 		st->max_x = st->attributed_ph;
+	}
 
-	if (++st->max_y < st->attributed_pv)
+	if (++st->max_y < st->attributed_pv) {
 		st->max_y = st->attributed_pv;
+	}
 
 	if (image->use_private_register && image->ncolors > 2 && !image->palette_modified) {
-		if (set_default_color(image) < 0)
+		if (set_default_color(image) < 0) {
 			return -1;
+		}
 	}
 
 	w = MIN(st->max_x, image->width);
 	h = MIN(st->max_y, image->height);
 
-	if ((numimages = (h + ch - 1) / ch) <= 0)
+	if ((numimages = (h + ch - 1) / ch) <= 0) {
 		return -1;
+	}
 
 	cols = (w + cw - 1) / cw;
 
@@ -276,8 +287,9 @@ int sixel_parser_finalize(sixel_state_t *st, ImageList **newimages, int cx, int 
 		if (!im || !im->pixels) {
 			for (im = *newimages; im; im = next) {
 				next = im->next;
-				if (im->pixels)
+				if (im->pixels) {
 					free(im->pixels);
+				}
 				free(im);
 			}
 			*newimages = NULL;
@@ -314,8 +326,9 @@ int sixel_parser_parse(sixel_state_t *st, const unsigned char *p, size_t len) {
 	sixel_image_t *image = &st->image;
 	sixel_color_no_t *data, color_index;
 
-	if (!image->data)
+	if (!image->data) {
 		st->state = PS_ERROR;
+	}
 
 	while (p < p2) {
 		switch (st->state) {
@@ -353,10 +366,11 @@ int sixel_parser_parse(sixel_state_t *st, const unsigned char *p, size_t len) {
 			case '-':
 				/* DECGNL Graphics Next Line */
 				st->pos_x = 0;
-				if (st->pos_y < DECSIXEL_HEIGHT_MAX - 5 - 6)
+				if (st->pos_y < DECSIXEL_HEIGHT_MAX - 5 - 6) {
 					st->pos_y += 6;
-				else
+				} else {
 					st->pos_y = DECSIXEL_HEIGHT_MAX + 1;
+				}
 				p++;
 				break;
 			default:
@@ -382,11 +396,13 @@ int sixel_parser_parse(sixel_state_t *st, const unsigned char *p, size_t len) {
 						}
 					}
 
-					if (st->color_index > image->ncolors)
+					if (st->color_index > image->ncolors) {
 						image->ncolors = st->color_index;
+					}
 
-					if (st->pos_x + st->repeat_count > image->width)
+					if (st->pos_x + st->repeat_count > image->width) {
 						st->repeat_count = image->width - st->pos_x;
+					}
 
 					if (st->repeat_count > 0 && st->pos_y + 5 < image->height) {
 						bits = *p - '?';
@@ -395,44 +411,55 @@ int sixel_parser_parse(sixel_state_t *st, const unsigned char *p, size_t len) {
 							width = image->width;
 							color_index = st->color_index;
 							if (st->repeat_count <= 1) {
-								if (bits & 0x01)
+								if (bits & 0x01) {
 									*data = color_index, n = 0;
+								}
 								data += width;
-								if (bits & 0x02)
+								if (bits & 0x02) {
 									*data = color_index, n = 1;
+								}
 								data += width;
-								if (bits & 0x04)
+								if (bits & 0x04) {
 									*data = color_index, n = 2;
+								}
 								data += width;
-								if (bits & 0x08)
+								if (bits & 0x08) {
 									*data = color_index, n = 3;
+								}
 								data += width;
-								if (bits & 0x10)
+								if (bits & 0x10) {
 									*data = color_index, n = 4;
-								if (bits & 0x20)
+								}
+								if (bits & 0x20) {
 									data[width] = color_index, n = 5;
-								if (st->max_x < st->pos_x)
+								}
+								if (st->max_x < st->pos_x) {
 									st->max_x = st->pos_x;
+								}
 							} else {
 								/* st->repeat_count > 1 */
 								for (i = 0; bits; bits >>= 1, i++, data += width) {
 									if (bits & 1) {
 										data[0] = color_index;
 										data[1] = color_index;
-										for (x = 2; x < st->repeat_count; x++)
+										for (x = 2; x < st->repeat_count; x++) {
 											data[x] = color_index;
+										}
 										n = i;
 									}
 								}
-								if (st->max_x < (st->pos_x + st->repeat_count - 1))
+								if (st->max_x < (st->pos_x + st->repeat_count - 1)) {
 									st->max_x = st->pos_x + st->repeat_count - 1;
+								}
 							}
-							if (st->max_y < (st->pos_y + n))
+							if (st->max_y < (st->pos_y + n)) {
 								st->max_y = st->pos_y + n;
+							}
 						}
 					}
-					if (st->repeat_count > 0)
+					if (st->repeat_count > 0) {
 						st->pos_x += st->repeat_count;
+					}
 					st->repeat_count = 1;
 				}
 				p++;
@@ -461,27 +488,35 @@ int sixel_parser_parse(sixel_state_t *st, const unsigned char *p, size_t len) {
 				p++;
 				break;
 			case ';':
-				if (st->nparams < DECSIXEL_PARAMS_MAX)
+				if (st->nparams < DECSIXEL_PARAMS_MAX) {
 					st->params[st->nparams++] = st->param;
+				}
 				st->param = 0;
 				p++;
 				break;
 			default:
-				if (st->nparams < DECSIXEL_PARAMS_MAX)
+				if (st->nparams < DECSIXEL_PARAMS_MAX) {
 					st->params[st->nparams++] = st->param;
-				if (st->nparams > 0)
+				}
+				if (st->nparams > 0) {
 					st->attributed_pad = st->params[0];
-				if (st->nparams > 1)
+				}
+				if (st->nparams > 1) {
 					st->attributed_pan = st->params[1];
-				if (st->nparams > 2 && st->params[2] > 0)
+				}
+				if (st->nparams > 2 && st->params[2] > 0) {
 					st->attributed_ph = st->params[2];
-				if (st->nparams > 3 && st->params[3] > 0)
+				}
+				if (st->nparams > 3 && st->params[3] > 0) {
 					st->attributed_pv = st->params[3];
+				}
 
-				if (st->attributed_pan <= 0)
+				if (st->attributed_pan <= 0) {
 					st->attributed_pan = 1;
-				if (st->attributed_pad <= 0)
+				}
+				if (st->attributed_pad <= 0) {
 					st->attributed_pad = 1;
+				}
 
 				if (image->width < st->attributed_ph || image->height < st->attributed_pv) {
 					sx = MAX(image->width, st->attributed_ph);
@@ -557,23 +592,26 @@ int sixel_parser_parse(sixel_state_t *st, const unsigned char *p, size_t len) {
 				p++;
 				break;
 			case ';':
-				if (st->nparams < DECSIXEL_PARAMS_MAX)
+				if (st->nparams < DECSIXEL_PARAMS_MAX) {
 					st->params[st->nparams++] = st->param;
+				}
 				st->param = 0;
 				p++;
 				break;
 			default:
 				st->state = PS_DECSIXEL;
-				if (st->nparams < DECSIXEL_PARAMS_MAX)
+				if (st->nparams < DECSIXEL_PARAMS_MAX) {
 					st->params[st->nparams++] = st->param;
+				}
 				st->param = 0;
 
 				if (st->nparams > 0) {
 					st->color_index = 1 + st->params[0]; /* offset 1(background color) added */
-					if (st->color_index < 0)
+					if (st->color_index < 0) {
 						st->color_index = 0;
-					else if (st->color_index >= DECSIXEL_PALETTE_MAX)
+					} else if (st->color_index >= DECSIXEL_PALETTE_MAX) {
 						st->color_index = DECSIXEL_PALETTE_MAX - 1;
+					}
 				}
 
 				if (st->nparams > 4) {
@@ -615,8 +653,9 @@ end:
 }
 
 void sixel_parser_deinit(sixel_state_t *st) {
-	if (st)
+	if (st) {
 		sixel_image_deinit(&st->image);
+	}
 }
 
 Pixmap sixel_create_clipmask(char *pixels, int width, int height) {
@@ -627,18 +666,21 @@ Pixmap sixel_create_clipmask(char *pixels, int width, int height) {
 	Pixmap clipmask;
 
 	clipdata = dst = malloc((width + 7) / 8 * height);
-	if (!clipdata)
+	if (!clipdata) {
 		return (Pixmap)None;
+	}
 
 	for (y = 0; y < height; y++) {
 		for (w = width; w > 0; w -= n) {
 			n = MIN(w, 8);
 			if (msb) {
-				for (b = 0x80, c = 0, i = 0; i < n; i++, b >>= 1)
+				for (b = 0x80, c = 0, i = 0; i < n; i++, b >>= 1) {
 					c |= (*src++) ? b : 0;
+				}
 			} else {
-				for (b = 0x01, c = 0, i = 0; i < n; i++, b <<= 1)
+				for (b = 0x01, c = 0, i = 0; i < n; i++, b <<= 1) {
 					c |= (*src++) ? b : 0;
+				}
 			}
 			*dst++ = c;
 		}

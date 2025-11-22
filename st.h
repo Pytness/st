@@ -369,8 +369,9 @@ static inline void tsetisclassicplaceholder(Glyph *g, uint32_t isclassic) {
 /// it from the cells to the left.
 static inline uint32_t tgetimgid(Glyph *g) {
 	uint32_t msb = tgetimgid4thbyteplus1(g);
-	if (msb != 0)
+	if (msb != 0) {
 		--msb;
+	}
 	return (msb << 24) | (g->fg & 0xFFFFFF);
 }
 
@@ -381,8 +382,9 @@ static inline void tsetimgid(Glyph *g, uint32_t id) {
 }
 
 static inline uint32_t tgetimgplacementid(Glyph *g) {
-	if (tgetdecorcolor(g) == DECOR_DEFAULT_COLOR)
+	if (tgetdecorcolor(g) == DECOR_DEFAULT_COLOR) {
 		return 0;
+	}
 	return g->decor & 0xFFFFFF;
 }
 
