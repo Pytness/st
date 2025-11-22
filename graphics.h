@@ -18,10 +18,9 @@ void gr_deinit();
 ///   image in the terminal grid.
 /// - `x_pix` and `y_pix` are the same but in pixels.
 /// - `reverse` indicates whether colors should be inverted.
-void gr_append_imagerect(Drawable buf, uint32_t image_id, uint32_t placement_id,
-			 int img_start_col, int img_end_col, int img_start_row,
-			 int img_end_row, int x_col, int y_row, int x_pix,
-			 int y_pix, int cw, int ch, int reverse);
+void gr_append_imagerect(Drawable buf, uint32_t image_id, uint32_t placement_id, int img_start_col, int img_end_col,
+                         int img_start_row, int img_end_row, int x_col, int y_row, int x_pix, int y_pix, int cw, int ch,
+                         int reverse);
 /// Prepare for image drawing. `cw` and `ch` are dimensions of the cell.
 void gr_start_drawing(Drawable buf, int cw, int ch);
 /// Finish image drawing. This functions will draw all the rectangles left to
@@ -43,10 +42,8 @@ void gr_preview_image(uint32_t image_id, const char *command);
 /// Executes `<st> -e less <file>` where <file> is the name of a temporary file
 /// containing the information about an image and placement, and <st> is
 /// specified with `st_executable`.
-void gr_show_image_info(uint32_t image_id, uint32_t placement_id,
-			uint32_t imgcol, uint32_t imgrow,
-			char is_classic_placeholder, int32_t diacritic_count,
-			char *st_executable);
+void gr_show_image_info(uint32_t image_id, uint32_t placement_id, uint32_t imgcol, uint32_t imgrow,
+                        char is_classic_placeholder, int32_t diacritic_count, char *st_executable);
 
 /// Dumps the internal state (images and placements) to stderr.
 void gr_dump_state();
@@ -56,8 +53,7 @@ void gr_unload_images_to_reduce_ram();
 
 /// Executes `callback` for each image cell. The callback should return 1 if it
 /// changed the glyph. This function is implemented in `st.c`.
-void gr_for_each_image_cell(int (*callback)(void *data, Glyph *gp),
-			    void *data);
+void gr_for_each_image_cell(int (*callback)(void *data, Glyph *gp), void *data);
 
 /// Marks all the rows containing the image with `image_id` as dirty.
 void gr_schedule_image_redraw_by_id(uint32_t image_id);
@@ -65,12 +61,11 @@ void gr_schedule_image_redraw_by_id(uint32_t image_id);
 /// Returns a pointer to the glyph under the classic placement with `image_id`
 /// and `placement_id` at `col` and `row` (1-based). May return NULL if the
 /// underneath text is unknown.
-Glyph *gr_get_glyph_underneath_image(uint32_t image_id, uint32_t placement_id,
-				     int col, int row);
+Glyph *gr_get_glyph_underneath_image(uint32_t image_id, uint32_t placement_id, int col, int row);
 
 typedef enum {
-	GRAPHICS_DEBUG_NONE = 0,
-	GRAPHICS_DEBUG_LOG = 1,
+	GRAPHICS_DEBUG_NONE          = 0,
+	GRAPHICS_DEBUG_LOG           = 1,
 	GRAPHICS_DEBUG_LOG_AND_BOXES = 2,
 } GraphicsDebugMode;
 
