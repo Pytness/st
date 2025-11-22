@@ -109,28 +109,28 @@ void drawbox(int x, int y, int w, int h, XftColor *fg, XftColor *bg, ushort bd) 
 		int w1 = DIV(w, 2);
 		int h1 = DIV(h, 4), h2 = DIV(h, 2), h3 = DIV(3 * h, 4);
 
-		if (bd & 1) {
+		if (bd & BRAILLE_TOP_LEFT) {
 			XftDrawRect(xd, fg, x, y, w1, h1);
 		}
-		if (bd & 2) {
+		if (bd & BRAILLE_MIDDLE_LEFT) {
 			XftDrawRect(xd, fg, x, y + h1, w1, h2 - h1);
 		}
-		if (bd & 4) {
+		if (bd & BRAILLE_BOTTOM_LEFT) {
 			XftDrawRect(xd, fg, x, y + h2, w1, h3 - h2);
 		}
-		if (bd & 8) {
+		if (bd & BRAILLE_TOP_RIGHT) {
 			XftDrawRect(xd, fg, x + w1, y, w - w1, h1);
 		}
-		if (bd & 16) {
+		if (bd & BRAILLE_MIDDLE_RIGHT) {
 			XftDrawRect(xd, fg, x + w1, y + h1, w - w1, h2 - h1);
 		}
-		if (bd & 32) {
+		if (bd & BRAILLE_BOTTOM_RIGHT) {
 			XftDrawRect(xd, fg, x + w1, y + h2, w - w1, h3 - h2);
 		}
-		if (bd & 64) {
+		if (bd & BRAILLE_LOWER_LEFT) {
 			XftDrawRect(xd, fg, x, y + h3, w1, h - h3);
 		}
-		if (bd & 128) {
+		if (bd & BRAILLE_LOWER_RIGHT) {
 			XftDrawRect(xd, fg, x + w1, y + h3, w - w1, h - h3);
 		}
 	}

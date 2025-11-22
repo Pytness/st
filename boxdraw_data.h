@@ -14,6 +14,8 @@
  *   https://github.com/GNOME/vte/blob/master/doc/boxes.txt
  */
 
+#include <stdint.h>
+
 /* Each shape is encoded as 16-bits. Higher bits are category, lower are data */
 /* Categories (mutually exclusive except BDB): */
 /* For convenience, BDL/BDA/BBS/BDB are 1 bit each, the rest are enums */
@@ -226,4 +228,15 @@ static const unsigned short boxdata[256] = {
 
         /* U+2504 - U+250B, U+254C - U+254F: unsupported (dashes) */
         /* U+2571 - U+2573: unsupported (diagonals) */
+};
+
+enum BrailleDots {
+	BRAILLE_TOP_LEFT     = 1 << 0,
+	BRAILLE_MIDDLE_LEFT  = 1 << 1,
+	BRAILLE_BOTTOM_LEFT  = 1 << 2,
+	BRAILLE_TOP_RIGHT    = 1 << 3,
+	BRAILLE_MIDDLE_RIGHT = 1 << 4,
+	BRAILLE_BOTTOM_RIGHT = 1 << 5,
+	BRAILLE_LOWER_LEFT   = 1 << 6,
+	BRAILLE_LOWER_RIGHT  = 1 << 7,
 };
