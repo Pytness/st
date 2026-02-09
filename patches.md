@@ -35,3 +35,5 @@
 - [x] st-universcroll-0.8.4.diff
 
 - [x] st-appsync-20200618-b27a383.diff
+
+- [x] st-alpha-20240814-a0274bc.diff

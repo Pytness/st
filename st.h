@@ -198,6 +198,7 @@ typedef struct {
 	XSetWindowAttributes attrs;
 	int scr;
 	int isfixed; /* is fixed geometry? */
+	int depth;   /* bit depth */
 	int l, t;    /* left and top offset */
 	int gm;      /* geometry mask */
 } XWindow;
