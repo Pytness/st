@@ -25,3 +25,5 @@
 - [ ] st-boxdraw_v2-0.8.5.diff
 
 - [ ] st-ligatures-boxdraw-20241226-0.9.2.diff
+
+- [ ] st-alpha-20240814-a0274bc.diff
