@@ -1818,7 +1818,7 @@ Pixmap gr_load_pixmap(ImagePlacement *placement, int frameidx, int cw, int ch) {
 	if (!drawable) {
 		drawable = DefaultRootWindow(disp);
 	}
-	pixmap              = XCreatePixmap(disp, drawable, scaled_w, scaled_h, 32);
+	pixmap              = XCreatePixmap(disp, drawable, scaled_w, scaled_h, xw.depth);
 	XVisualInfo visinfo = {0};
 	Status visual_found = XMatchVisualInfo(disp, DefaultScreen(disp), 32, TrueColor, &visinfo) ||
 	                      XMatchVisualInfo(disp, DefaultScreen(disp), 24, TrueColor, &visinfo);
@@ -2345,7 +2345,7 @@ static void gr_drawimagerect(Drawable buf, ImageRect *rect) {
 	if (rect->reverse) {
 		unsigned pixmap_w = (unsigned)placement->cols * placement->scaled_cw;
 		unsigned pixmap_h = (unsigned)placement->rows * placement->scaled_ch;
-		Pixmap invpixmap  = XCreatePixmap(disp, buf, pixmap_w, pixmap_h, 32);
+		Pixmap invpixmap  = XCreatePixmap(disp, buf, pixmap_w, pixmap_h, xw.depth);
 		XGCValues gcv     = {.function = GXcopyInverted};
 		GC gc             = XCreateGC(disp, invpixmap, GCFunction, &gcv);
 		XCopyArea(disp, pixmap, invpixmap, gc, 0, 0, pixmap_w, pixmap_h, 0, 0);

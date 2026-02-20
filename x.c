@@ -2165,7 +2165,7 @@ void xfinishdraw(void) {
 		width  = MAX(im->width * win.cw / im->cw, 1);
 		height = MAX(im->height * win.ch / im->ch, 1);
 		if (!im->pixmap) {
-			im->pixmap = (void *)XCreatePixmap(xw.dpy, xw.win, width, height, DefaultDepth(xw.dpy, xw.scr));
+			im->pixmap = (void *)XCreatePixmap(xw.dpy, xw.win, width, height, xw.depth);
 			if (!im->pixmap) {
 				continue;
 			}
@@ -2181,7 +2181,7 @@ void xfinishdraw(void) {
 				                 .bytes_per_line   = im->width * 4,
 				                 .bitmap_unit      = 32,
 				                 .bitmap_pad       = 32,
-				                 .depth            = 24};
+				                 .depth            = xw.depth};
 				XPutImage(xw.dpy, (Drawable)im->pixmap, dc.gc, &ximage, 0, 0, 0, 0, width, height);
 				if (im->transparent) {
 					im->clipmask = (void *)sixel_create_clipmask((char *)im->pixels, width, height);
@@ -2213,7 +2213,7 @@ void xfinishdraw(void) {
 				                 .bytes_per_line   = width * 4,
 				                 .bitmap_unit      = 32,
 				                 .bitmap_pad       = 32,
-				                 .depth            = 24};
+				                 .depth            = xw.depth};
 				XPutImage(xw.dpy, (Drawable)im->pixmap, dc.gc, &ximage, 0, 0, 0, 0, width, height);
 				if (im->transparent) {
 					im->clipmask = (void *)sixel_create_clipmask(
