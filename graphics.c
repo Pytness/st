@@ -34,7 +34,9 @@
 #define _DARWIN_C_SOURCE
 #endif
 
-#define _POSIX_C_SOURCE 200809L
+// _GNU_SOURCE exposes copy_file_range and other GNU/Linux extensions;
+// it is a superset of _POSIX_C_SOURCE 200809L.
+#define _GNU_SOURCE
 
 #include <zlib.h>
 #include <Imlib2.h>
@@ -2659,41 +2661,39 @@ static void sanitize_str(char *str, size_t max_size) {
 /// careful.
 static const char *sanitized_filename(const char *str) {
 	static char buf[MAX_FILENAME_SIZE];
-	strncpy(buf, str, sizeof(buf) - 1);
-	buf[sizeof(buf) - 1] = '\0';
+	strncpy(buf, str, MAX_FILENAME_SIZE - 1);
+	buf[MAX_FILENAME_SIZE - 1] = '\0';
 	sanitize_str(buf, sizeof(buf));
 	return buf;
 }
 
-/// Copies a file from `src` to `dst` using read/write, avoiding shell
-/// invocation. Returns 0 on success, -1 on failure.
+/// Copies a file from `src` to `dst` using copy_file_range, avoiding shell
+/// invocation and unnecessary userspace buffering. Returns 0 on success,
+/// -1 on failure.
 static int copy_file(const char *src, const char *dst) {
 	int src_fd = open(src, O_RDONLY);
 	if (src_fd < 0)
 		return -1;
+	struct stat st;
+	if (fstat(src_fd, &st) < 0) {
+		close(src_fd);
+		return -1;
+	}
 	int dst_fd = open(dst, O_WRONLY | O_CREAT | O_TRUNC, 0600);
 	if (dst_fd < 0) {
 		close(src_fd);
 		return -1;
 	}
-	char buf[65536];
-	ssize_t nr, nw;
+	size_t remaining = (size_t)st.st_size;
 	int ret = 0;
-	while ((nr = read(src_fd, buf, sizeof(buf))) > 0) {
-		const char *p = buf;
-		while (nr > 0) {
-			nw = write(dst_fd, p, (size_t)nr);
-			if (nw < 0) {
-				ret = -1;
-				goto done;
-			}
-			p += nw;
-			nr -= nw;
+	while (remaining > 0) {
+		ssize_t copied = copy_file_range(src_fd, NULL, dst_fd, NULL, remaining, 0);
+		if (copied <= 0) {
+			ret = -1;
+			break;
 		}
+		remaining -= (size_t)copied;
 	}
-	if (nr < 0)
-		ret = -1;
-done:
 	close(dst_fd);
 	close(src_fd);
 	return ret;
@@ -2714,39 +2714,34 @@ static void gr_createresponse(uint32_t image_id, uint32_t image_number, uint32_t
 	size_t maxlen = MAX_GRAPHICS_RESPONSE_LEN;
 	size_t written;
 	written = snprintf(buf, maxlen, "\033_G");
-	if (written >= maxlen)
-		goto truncated;
 	buf += written;
 	maxlen -= written;
 	if (image_id) {
 		written = snprintf(buf, maxlen, "i=%u,", image_id);
-		if (written >= maxlen)
-			goto truncated;
 		buf += written;
 		maxlen -= written;
 	}
 	if (image_number) {
 		written = snprintf(buf, maxlen, "I=%u,", image_number);
-		if (written >= maxlen)
-			goto truncated;
 		buf += written;
 		maxlen -= written;
 	}
 	if (placement_id) {
 		written = snprintf(buf, maxlen, "p=%u,", placement_id);
-		if (written >= maxlen)
-			goto truncated;
 		buf += written;
 		maxlen -= written;
 	}
 	buf[-1] = ';';
 	written = snprintf(buf, maxlen, "%s\033\\", msg);
+	/* If msg was too long and snprintf truncated, clamp written to the
+	 * actual bytes placed in the buffer so that buf[-2] and buf[-1]
+	 * reference the last two written characters and we can enforce the
+	 * correct ST (String Terminator) escape sequence. */
 	if (written >= maxlen)
-		goto truncated;
-	return;
-truncated:
-	/* Clear the partial response on truncation */
-	graphics_command_result.response[0] = '\0';
+		written = maxlen - 1;
+	buf += written;
+	buf[-2] = '\033';
+	buf[-1] = '\\';
 }
 
 /// Creates the 'OK' response to the current command, unless suppressed or a
