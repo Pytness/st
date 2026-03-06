@@ -2185,9 +2185,15 @@ void gr_show_image_info(uint32_t image_id, uint32_t placement_id, uint32_t imgco
                         char is_classic_placeholder, int32_t diacritic_count, char *st_executable) {
 	char filename[MAX_FILENAME_SIZE];
 	snprintf(filename, sizeof(filename), "%s/info-%u", cache_dir, image_id);
-	FILE *file = fopen(filename, "w");
+	int fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0600);
+	if (fd < 0) {
+		perror("open");
+		return;
+	}
+	FILE *file = fdopen(fd, "w");
 	if (!file) {
-		perror("fopen");
+		perror("fdopen");
+		close(fd);
 		return;
 	}
 	// Basic information about the cell.
@@ -2866,8 +2872,17 @@ static int gr_append_raw_data_to_file(ImageFrame *frame, const char *data, size_
 		gr_make_sure_tmpdir_exists();
 		char filename[MAX_FILENAME_SIZE];
 		gr_get_frame_filename(frame, filename, MAX_FILENAME_SIZE);
-		FILE *file = fopen(filename, frame->disk_size ? "a" : "w");
+		int flags = frame->disk_size
+		                ? (O_WRONLY | O_CREAT | O_APPEND)
+		                : (O_WRONLY | O_CREAT | O_TRUNC);
+		int cfd = open(filename, flags, 0600);
+		if (cfd < 0) {
+			perror("open");
+			return 0;
+		}
+		FILE *file = fdopen(cfd, frame->disk_size ? "a" : "w");
 		if (!file) {
+			close(cfd);
 			return 0;
 		}
 		frame->open_file = file;
