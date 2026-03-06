@@ -2674,26 +2674,13 @@ static int copy_file(const char *src, const char *dst) {
 	int src_fd = open(src, O_RDONLY);
 	if (src_fd < 0)
 		return -1;
-	struct stat st;
-	if (fstat(src_fd, &st) < 0) {
-		close(src_fd);
-		return -1;
-	}
 	int dst_fd = open(dst, O_WRONLY | O_CREAT | O_TRUNC, 0600);
 	if (dst_fd < 0) {
 		close(src_fd);
 		return -1;
 	}
-	size_t remaining = (size_t)st.st_size;
-	int ret = 0;
-	while (remaining > 0) {
-		ssize_t copied = copy_file_range(src_fd, NULL, dst_fd, NULL, remaining, 0);
-		if (copied <= 0) {
-			ret = -1;
-			break;
-		}
-		remaining -= (size_t)copied;
-	}
+	ssize_t copied = copy_file_range(src_fd, NULL, dst_fd, NULL, SIZE_MAX, 0);
+	int ret = (copied < 0) ? -1 : 0;
 	close(dst_fd);
 	close(src_fd);
 	return ret;
