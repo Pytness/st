@@ -44,6 +44,8 @@ extern char **environ;
 #define STR_ARG_SIZ  ESC_ARG_SIZ
 #define STR_TERM_ST  "\033\\"
 #define STR_TERM_BEL "\007"
+/* Maximum number of argv entries passed to stty (tokens + NULL) */
+#define STTY_ARGV_MAX 256
 
 /* PUA character used as an image placeholder */
 #define IMAGE_PLACEHOLDER_CHAR     0x10EEEE
@@ -869,7 +871,7 @@ void sigchld(int a) {
 }
 
 void stty(char **args) {
-	char *argv[256]; /* up to 255 tokens + NULL terminator */
+	char *argv[STTY_ARGV_MAX]; /* up to STTY_ARGV_MAX-1 tokens + NULL terminator */
 	int argc = 0;
 	char stty_cmd[_POSIX_ARG_MAX];
 	size_t n;
@@ -881,13 +883,13 @@ void stty(char **args) {
 
 	/* Tokenize stty_args (split on spaces/tabs) to build argv */
 	char *tok = strtok(stty_cmd, " \t");
-	while (tok && argc < (int)(sizeof(argv) / sizeof(argv[0])) - 1) {
+	while (tok && argc < STTY_ARGV_MAX - 1) {
 		argv[argc++] = tok;
 		tok = strtok(NULL, " \t");
 	}
 
 	/* Append additional args */
-	for (char **p = args; p && *p && argc < (int)(sizeof(argv) / sizeof(argv[0])) - 1; ++p) {
+	for (char **p = args; p && *p && argc < STTY_ARGV_MAX - 1; ++p) {
 		argv[argc++] = *p;
 	}
 	argv[argc] = NULL;

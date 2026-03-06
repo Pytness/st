@@ -2162,7 +2162,7 @@ void gr_preview_image(uint32_t image_id, const char *exec) {
 			if (posix_spawnp(&cpid, "xmessage", NULL, NULL, xmsg_argv, environ) != 0)
 				fprintf(stderr, "error: could not execute xmessage\n");
 		} else {
-			char *argv[] = {(char *)exec, filename, NULL};
+			char *argv[] = {(char *)exec, filename, NULL}; /* cast safe: posix_spawnp won't modify argv */
 			if (posix_spawnp(&cpid, exec, NULL, NULL, argv, environ) != 0)
 				fprintf(stderr, "error: could not execute %s\n",
 				        sanitized_filename(exec));
@@ -2743,10 +2743,6 @@ static void gr_createresponse(uint32_t image_id, uint32_t image_number, uint32_t
 	written = snprintf(buf, maxlen, "%s\033\\", msg);
 	if (written >= maxlen)
 		goto truncated;
-	buf += written;
-	(void)maxlen;
-	buf[-2] = '\033';
-	buf[-1] = '\\';
 	return;
 truncated:
 	/* Clear the partial response on truncation */
