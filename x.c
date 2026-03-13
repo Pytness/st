@@ -15,6 +15,7 @@
 #include <X11/cursorfont.h>
 #include <X11/keysym.h>
 #include <X11/Xft/Xft.h>
+#include <X11/Xresource.h>
 #include <X11/XKBlib.h>
 
 char *argv0;
@@ -1015,7 +1016,7 @@ int xloadfont(Font *f, FcPattern *pattern) {
 	FcConfigSubstitute(NULL, configured, FcMatchPattern);
 	XftDefaultSubstitute(xw.dpy, xw.scr, configured);
 
-	match = FcFontMatch(NULL, configured, &result);
+	match = XftFontMatch(xw.dpy, xw.scr, pattern, &result);
 	if (!match) {
 		FcPatternDestroy(configured);
 		return 1;
@@ -1141,7 +1142,7 @@ int xloadsparefont(FcPattern *pattern, int flags) {
 	FcPattern *match;
 	FcResult result;
 
-	match = FcFontMatch(NULL, pattern, &result);
+	match = XftFontMatch(xw.dpy, xw.scr, pattern, &result);
 	if (!match) {
 		return 1;
 	}
@@ -1161,7 +1162,7 @@ int xloadsparefont(FcPattern *pattern, int flags) {
 
 void xloadsparefonts(void) {
 	FcPattern *pattern;
-	double sizeshift, fontval;
+	double fontval;
 	int fc;
 	char **fp;
 
@@ -1193,21 +1194,26 @@ void xloadsparefonts(void) {
 			die("can't open spare font %s\n", *fp);
 		}
 
-		if (defaultfontsize > 0) {
-			sizeshift = usedfontsize - defaultfontsize;
-			if (sizeshift != 0 &&
-			    FcPatternGetDouble(pattern, FC_PIXEL_SIZE, 0, &fontval) == FcResultMatch) {
-				fontval += sizeshift;
+		if (defaultfontsize > 0 && defaultfontsize != usedfontsize) {
+			if (FcPatternGetDouble(pattern, FC_PIXEL_SIZE, 0, &fontval) == FcResultMatch) {
+				fontval *= usedfontsize / defaultfontsize;
 				FcPatternDel(pattern, FC_PIXEL_SIZE);
 				FcPatternDel(pattern, FC_SIZE);
 				FcPatternAddDouble(pattern, FC_PIXEL_SIZE, fontval);
+			} else if (FcPatternGetDouble(pattern, FC_SIZE, 0, &fontval) == FcResultMatch) {
+				fontval *= usedfontsize / defaultfontsize;
+				FcPatternDel(pattern, FC_PIXEL_SIZE);
+				FcPatternDel(pattern, FC_SIZE);
+				FcPatternAddDouble(pattern, FC_SIZE, fontval);
 			}
 		}
 
+		fprintf(stderr, "SIZE: %f, used: %f, default: %f\n", fontval, usedfontsize, defaultfontsize);
+
 		FcPatternAddBool(pattern, FC_SCALABLE, 1);
 
-		FcConfigSubstitute(NULL, pattern, FcMatchPattern);
-		XftDefaultSubstitute(xw.dpy, xw.scr, pattern);
+		// FcConfigSubstitute(NULL, pattern, FcMatchPattern);
+		// XftDefaultSubstitute(xw.dpy, xw.scr, pattern);
 
 		if (xloadsparefont(pattern, FRC_NORMAL)) {
 			die("can't open spare font %s\n", *fp);
@@ -2647,6 +2653,33 @@ void usage(void) {
 	    argv0, argv0);
 }
 
+double get_dpi(Display *dpy) {
+	char *res_string = XResourceManagerString(dpy);
+
+	if (!res_string)
+		return 96.0; // fallback
+
+	XrmInitialize();
+
+	XrmDatabase db = XrmGetStringDatabase(res_string);
+
+	XrmValue value;
+	char *type;
+
+	if (XrmGetResource(db, "Xft.dpi", "Xft.Dpi", &type, &value)) {
+		return atof(value.addr);
+	}
+
+	return 96.0;
+}
+
+void calculate_dpi(Display *dpy, int screen) {
+	double dpi_x = (DisplayWidth(dpy, screen) * 25.4) / DisplayWidthMM(dpy, screen);
+
+	double dpi_y = (DisplayHeight(dpy, screen) * 25.4) / DisplayHeightMM(dpy, screen);
+	fprintf(stderr, "Calculated DPI: %.2f x %.2f\n", dpi_x, dpi_y);
+}
+
 int main(int argc, char *argv[]) {
 	xw.l = xw.t = 0;
 	xw.isfixed  = False;
@@ -2719,6 +2752,11 @@ run:
 	xinit(cols, rows);
 	xsetenv();
 	selinit();
+
+	double dpi = get_dpi(xw.dpy);
+	fprintf(stderr, "Xft.dpi: %.2f\n", dpi);
+
+	calculate_dpi(xw.dpy, xw.scr);
 	run();
 
 	return 0;
