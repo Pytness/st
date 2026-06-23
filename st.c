@@ -4,6 +4,7 @@
 #include <fcntl.h>
 #include <limits.h>
 #include <pwd.h>
+#include <spawn.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,6 +18,8 @@
 #include <time.h>
 #include <unistd.h>
 #include <wchar.h>
+
+extern char **environ;
 
 #include "st.h"
 #include "win.h"
@@ -41,6 +44,8 @@
 #define STR_ARG_SIZ  ESC_ARG_SIZ
 #define STR_TERM_ST  "\033\\"
 #define STR_TERM_BEL "\007"
+/* Maximum number of argv entries passed to stty (tokens + NULL) */
+#define STTY_ARGV_MAX 256
 
 /* PUA character used as an image placeholder */
 #define IMAGE_PLACEHOLDER_CHAR     0x10EEEE
@@ -866,28 +871,42 @@ void sigchld(int a) {
 }
 
 void stty(char **args) {
-	char cmd[_POSIX_ARG_MAX], **p, *q, *s;
-	size_t n, siz;
+	char *argv[STTY_ARGV_MAX]; /* up to STTY_ARGV_MAX-1 tokens + NULL terminator */
+	int argc = 0;
+	char stty_cmd[_POSIX_ARG_MAX];
+	size_t n;
 
-	if ((n = strlen(stty_args)) > sizeof(cmd) - 1) {
+	if ((n = strlen(stty_args)) >= sizeof(stty_cmd)) {
 		die("incorrect stty parameters\n");
 	}
-	memcpy(cmd, stty_args, n);
-	q   = cmd + n;
-	siz = sizeof(cmd) - n;
-	for (p = args; p && (s = *p); ++p) {
-		if ((n = strlen(s)) > siz - 1) {
-			die("stty parameter length too long\n");
-		}
-		*q++ = ' ';
-		memcpy(q, s, n);
-		q += n;
-		siz -= n + 1;
+	memcpy(stty_cmd, stty_args, n + 1);
+
+	/* Tokenize stty_args (split on spaces/tabs) to build argv */
+	char *tok = strtok(stty_cmd, " \t");
+	while (tok && argc < STTY_ARGV_MAX - 1) {
+		argv[argc++] = tok;
+		tok = strtok(NULL, " \t");
 	}
-	*q = '\0';
-	if (system(cmd) != 0) {
+
+	/* Append additional args */
+	for (char **p = args; p && *p && argc < STTY_ARGV_MAX - 1; ++p) {
+		argv[argc++] = *p;
+	}
+	argv[argc] = NULL;
+
+	if (argc == 0)
+		return;
+
+	pid_t cpid;
+	if (posix_spawnp(&cpid, argv[0], NULL, NULL, argv, environ) != 0) {
 		perror("Couldn't call stty");
+		return;
 	}
+	int status;
+	if (waitpid(cpid, &status, 0) < 0)
+		perror("stty waitpid");
+	else if (status != 0)
+		fprintf(stderr, "stty returned status %d\n", status);
 }
 
 int ttynew(const char *line, char *cmd, const char *out, char **args) {
@@ -896,7 +915,7 @@ int ttynew(const char *line, char *cmd, const char *out, char **args) {
 
 	if (out) {
 		term.mode |= MODE_PRINT;
-		iofd = (!strcmp(out, "-")) ? 1 : open(out, O_WRONLY | O_CREAT, 0666);
+		iofd = (!strcmp(out, "-")) ? 1 : open(out, O_WRONLY | O_CREAT, 0600);
 		if (iofd < 0) {
 			fprintf(stderr, "Error opening %s:%s\n", out, strerror(errno));
 		}

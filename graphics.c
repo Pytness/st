@@ -34,7 +34,9 @@
 #define _DARWIN_C_SOURCE
 #endif
 
-#define _POSIX_C_SOURCE 200809L
+// _GNU_SOURCE exposes copy_file_range and other GNU/Linux extensions;
+// it is a superset of _POSIX_C_SOURCE 200809L.
+#define _GNU_SOURCE
 
 #include <zlib.h>
 #include <Imlib2.h>
@@ -360,6 +362,7 @@ static void gr_check_limits();
 static char *gr_base64dec(const char *src, size_t *size);
 static void sanitize_str(char *str, size_t max_len);
 static const char *sanitized_filename(const char *str);
+static int copy_file(const char *src, const char *dst);
 
 /// The array of image rectangles to draw. It is reset each frame.
 static ImageRect image_rects[MAX_IMAGE_RECTS] = {{0}};
@@ -1870,7 +1873,8 @@ Pixmap gr_load_pixmap(ImagePlacement *placement, int frameidx, int cw, int ch) {
 
 /// Creates a temporary directory.
 static int gr_create_cache_dir() {
-	strncpy(cache_dir, graphics_cache_dir_template, sizeof(cache_dir));
+	strncpy(cache_dir, graphics_cache_dir_template, sizeof(cache_dir) - 1);
+	cache_dir[sizeof(cache_dir) - 1] = '\0';
 	if (!mkdtemp(cache_dir)) {
 		fprintf(stderr,
 		        "error: could not create temporary dir from template "
@@ -2145,30 +2149,32 @@ void gr_dump_state() {
 // TODO: Currently we do this for the first frame only. Not sure what to do with
 //       animations.
 void gr_preview_image(uint32_t image_id, const char *exec) {
-	char command[256];
-	size_t len;
+	pid_t cpid;
 	Image *img = gr_find_image(image_id);
 	if (img) {
 		ImageFrame *frame = &img->first_frame;
 		char filename[MAX_FILENAME_SIZE];
 		gr_get_frame_filename(frame, filename, MAX_FILENAME_SIZE);
 		if (frame->disk_size == 0) {
-			len = snprintf(command, 255,
-			               "xmessage 'Image with id=%u is not "
-			               "fully copied to %s'",
-			               image_id, sanitized_filename(filename));
+			char msg[MAX_FILENAME_SIZE + 64];
+			snprintf(msg, sizeof(msg),
+			         "Image with id=%u is not fully copied to %s",
+			         image_id, sanitized_filename(filename));
+			char *xmsg_argv[] = {"xmessage", msg, NULL};
+			if (posix_spawnp(&cpid, "xmessage", NULL, NULL, xmsg_argv, environ) != 0)
+				fprintf(stderr, "error: could not execute xmessage\n");
 		} else {
-			len = snprintf(command, 255, "%s %s &", exec, sanitized_filename(filename));
+			char *argv[] = {(char *)exec, filename, NULL}; /* cast safe: posix_spawnp won't modify argv */
+			if (posix_spawnp(&cpid, exec, NULL, NULL, argv, environ) != 0)
+				fprintf(stderr, "error: could not execute %s\n",
+				        sanitized_filename(exec));
 		}
 	} else {
-		len = snprintf(command, 255, "xmessage 'Cannot find image with id=%u'", image_id);
-	}
-	if (len > 255) {
-		fprintf(stderr, "error: command too long: %s\n", command);
-		snprintf(command, 255, "xmessage 'error: command too long'");
-	}
-	if (system(command) != 0) {
-		fprintf(stderr, "error: could not execute command %s\n", command);
+		char msg[64];
+		snprintf(msg, sizeof(msg), "Cannot find image with id=%u", image_id);
+		char *xmsg_argv[] = {"xmessage", msg, NULL};
+		if (posix_spawnp(&cpid, "xmessage", NULL, NULL, xmsg_argv, environ) != 0)
+			fprintf(stderr, "error: could not execute xmessage\n");
 	}
 }
 
@@ -2179,9 +2185,15 @@ void gr_show_image_info(uint32_t image_id, uint32_t placement_id, uint32_t imgco
                         char is_classic_placeholder, int32_t diacritic_count, char *st_executable) {
 	char filename[MAX_FILENAME_SIZE];
 	snprintf(filename, sizeof(filename), "%s/info-%u", cache_dir, image_id);
-	FILE *file = fopen(filename, "w");
+	int fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0600);
+	if (fd < 0) {
+		perror("open");
+		return;
+	}
+	FILE *file = fdopen(fd, "w");
 	if (!file) {
-		perror("fopen");
+		perror("fdopen");
+		close(fd);
 		return;
 	}
 	// Basic information about the cell.
@@ -2655,9 +2667,29 @@ static void sanitize_str(char *str, size_t max_size) {
 /// careful.
 static const char *sanitized_filename(const char *str) {
 	static char buf[MAX_FILENAME_SIZE];
-	strncpy(buf, str, sizeof(buf));
+	strncpy(buf, str, MAX_FILENAME_SIZE - 1);
+	buf[MAX_FILENAME_SIZE - 1] = '\0';
 	sanitize_str(buf, sizeof(buf));
 	return buf;
+}
+
+/// Copies a file from `src` to `dst` using copy_file_range, avoiding shell
+/// invocation and unnecessary userspace buffering. Returns 0 on success,
+/// -1 on failure.
+static int copy_file(const char *src, const char *dst) {
+	int src_fd = open(src, O_RDONLY);
+	if (src_fd < 0)
+		return -1;
+	int dst_fd = open(dst, O_WRONLY | O_CREAT | O_TRUNC, 0600);
+	if (dst_fd < 0) {
+		close(src_fd);
+		return -1;
+	}
+	ssize_t copied = copy_file_range(src_fd, NULL, dst_fd, NULL, SIZE_MAX, 0);
+	int ret = (copied < 0) ? -1 : 0;
+	close(dst_fd);
+	close(src_fd);
+	return ret;
 }
 
 /// Creates a response to the current command in `graphics_command_result`.
@@ -2694,8 +2726,13 @@ static void gr_createresponse(uint32_t image_id, uint32_t image_number, uint32_t
 	}
 	buf[-1] = ';';
 	written = snprintf(buf, maxlen, "%s\033\\", msg);
+	/* If msg was too long and snprintf truncated, clamp written to the
+	 * actual bytes placed in the buffer so that buf[-2] and buf[-1]
+	 * reference the last two written characters and we can enforce the
+	 * correct ST (String Terminator) escape sequence. */
+	if (written >= maxlen)
+		written = maxlen - 1;
 	buf += written;
-	maxlen -= written;
 	buf[-2] = '\033';
 	buf[-1] = '\\';
 }
@@ -2835,8 +2872,17 @@ static int gr_append_raw_data_to_file(ImageFrame *frame, const char *data, size_
 		gr_make_sure_tmpdir_exists();
 		char filename[MAX_FILENAME_SIZE];
 		gr_get_frame_filename(frame, filename, MAX_FILENAME_SIZE);
-		FILE *file = fopen(filename, frame->disk_size ? "a" : "w");
+		int flags = frame->disk_size
+		                ? (O_WRONLY | O_CREAT | O_APPEND)
+		                : (O_WRONLY | O_CREAT | O_TRUNC);
+		int cfd = open(filename, flags, 0600);
+		if (cfd < 0) {
+			perror("open");
+			return 0;
+		}
+		FILE *file = fdopen(cfd, frame->disk_size ? "a" : "w");
 		if (!file) {
+			close(cfd);
 			return 0;
 		}
 		frame->open_file = file;
@@ -3102,25 +3148,14 @@ static ImageFrame *gr_handle_transmit_command(GraphicsCommand *cmd) {
 			// Build the filename for the cached copy of the file.
 			char cache_filename[MAX_FILENAME_SIZE];
 			gr_get_frame_filename(frame, cache_filename, MAX_FILENAME_SIZE);
-			// We will create a symlink to the original file, and
-			// then copy the file to the temporary cache dir. We do
-			// this symlink trick mostly to be able to use cp for
-			// copying, and avoid escaping file name characters when
-			// calling system at the same time.
-			char tmp_filename_symlink[MAX_FILENAME_SIZE + 4] = {0};
-			strcat(tmp_filename_symlink, cache_filename);
-			strcat(tmp_filename_symlink, ".sym");
-			char command[MAX_FILENAME_SIZE + 256];
-			size_t len = snprintf(command, MAX_FILENAME_SIZE + 255, "cp '%s' '%s'", tmp_filename_symlink,
-			                      cache_filename);
-			if (len > MAX_FILENAME_SIZE + 255 || symlink(original_filename, tmp_filename_symlink) ||
-			    system(command) != 0) {
+			// Copy the file directly using read/write, no shell involved.
+			if (copy_file(original_filename, cache_filename) != 0) {
 				gr_reporterror_cmd(cmd, "EBADF: could not copy the "
 				                        "image to the cache dir");
 				fprintf(stderr,
 				        "Could not copy the image "
-				        "%s (symlink %s) to %s",
-				        sanitized_filename(original_filename), tmp_filename_symlink, cache_filename);
+				        "%s to %s",
+				        sanitized_filename(original_filename), cache_filename);
 				frame->status            = STATUS_UPLOADING_ERROR;
 				frame->uploading_failure = ERROR_CANNOT_COPY_FILE;
 			} else {
@@ -3141,8 +3176,6 @@ static ImageFrame *gr_handle_transmit_command(GraphicsCommand *cmd) {
 					frame = gr_loadimage_and_report(frame);
 				}
 			}
-			// Delete the symlink.
-			unlink(tmp_filename_symlink);
 			// Delete the original file if it's temporary.
 			if (cmd->transmission_medium == 't') {
 				gr_delete_tmp_file(original_filename);
